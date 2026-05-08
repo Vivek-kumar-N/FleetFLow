@@ -79,6 +79,7 @@ public class Booking {
     @JoinColumn(name = "registration_number", referencedColumnName = "registration_number", nullable = false)
     private Car car;
 
+    //check
 
 
     @PrePersist

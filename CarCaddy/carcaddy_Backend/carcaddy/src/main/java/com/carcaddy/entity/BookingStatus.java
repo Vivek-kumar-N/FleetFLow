@@ -6,6 +6,6 @@ public enum BookingStatus {
     ACTIVE,      // car picked up, rental ongoing
     COMPLETED,   // car returned
     CANCELLED,   // cancelled by user
-    MODIFIED     // booking updated
+    MODIFIED     
 
 }
