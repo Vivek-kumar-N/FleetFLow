@@ -3,18 +3,23 @@
 package com.carcaddy.entity;
  
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDate;
- 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
  
 @Entity
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-@Table(
-    name = "car",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = "insurance_number")
-    }
-)
+@Table(name = "car")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Car {
  
  
@@ -66,115 +71,9 @@ public class Car {
     @Column(name = "status", nullable = false)
     private CarStatus status;
  
-    /* ---------------- Constructors ---------------- */
- 
-    public Car() {}
- 
-    /* ---------------- Getters & Setters ---------------- */
- 
-    public String getRegistrationNumber() {
-        return registrationNumber;
-    }
- 
-    public void setRegistrationNumber(String registrationNumber) {
-        this.registrationNumber = registrationNumber;
-    }
- 
-    public String getCategory() {
-        return category;
-    }
- 
-    public void setCategory(String category) {
-        this.category = category;
-    }
- 
-    public String getColor() {
-        return color;
-    }
- 
-    public void setColor(String color) {
-        this.color = color;
-    }
- 
-    public String getCarCondition() {
-        return carCondition;
-    }
- 
-    public void setCarCondition(String carCondition) {
-        this.carCondition = carCondition;
-    }
- 
-    public String getInsuranceNumber() {
-        return insuranceNumber;
-    }
- 
-    public void setInsuranceNumber(String insuranceNumber) {
-        this.insuranceNumber = insuranceNumber;
-    }
- 
-    public LocalDate getLastServiceDate() {
-        return lastServiceDate;
-    }
- 
-    public void setLastServiceDate(LocalDate lastServiceDate) {
-        this.lastServiceDate = lastServiceDate;
-    }
- 
-    public Double getLastServiceMileage() {
-        return lastServiceMileage;
-    }
- 
-    public void setLastServiceMileage(Double lastServiceMileage) {
-        this.lastServiceMileage = lastServiceMileage;
-    }
- 
-    public Double getMileage() {
-        return mileage;
-    }
- 
-    public void setMileage(Double mileage) {
-        this.mileage = mileage;
-    }
- 
-    public String getModel() {
-        return model;
-    }
- 
-    public void setModel(String model) {
-        this.model = model;
-    }
- 
-    public LocalDate getRegistrationDate() {
-        return registrationDate;
-    }
- 
-    public void setRegistrationDate(LocalDate registrationDate) {
-        this.registrationDate = registrationDate;
-    }
- 
-    public Integer getRentalCount() {
-        return rentalCount;
-    }
- 
-    public void setRentalCount(Integer rentalCount) {
-        this.rentalCount = rentalCount;
-    }
- 
-    public Double getRentalRatePerDay() {
-        return rentalRatePerDay;
-    }
- 
-    public void setRentalRatePerDay(Double rentalRatePerDay) {
-        this.rentalRatePerDay = rentalRatePerDay;
-    }
- 
-    public CarStatus getStatus() {
-        return status;
-    }
- 
-    public void setStatus(CarStatus status) {
-        this.status = status;
-    }
+    @OneToMany(mappedBy = "car", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<Booking> bookings;
 }
 
 

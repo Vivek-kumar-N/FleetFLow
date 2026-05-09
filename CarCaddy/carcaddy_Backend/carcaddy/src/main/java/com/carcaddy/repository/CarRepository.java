@@ -1,11 +1,13 @@
 package com.carcaddy.repository;
  
+
 import com.carcaddy.entity.Car;
 import com.carcaddy.entity.CarStatus;
  
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
- 
 import java.util.List;
 import java.util.Optional;
  
@@ -36,19 +38,19 @@ public interface CarRepository extends JpaRepository<Car, String> {
  
  
     //  7.  Get DISTINCT models for a category (FOR DROPDOWN UI)
-    // @Query("""
-    //     SELECT DISTINCT c.model FROM Car c
-    //     WHERE c.category = :category
-    // """)
-    // List<String> findDistinctModelsByCategory(@Param("category") String category);
+    @Query("""
+        SELECT DISTINCT c.model FROM Car c
+        WHERE c.category = :category
+    """)
+    List<String> findDistinctModelsByCategory(@Param("category") String category);
  
  
     //  8.  OPTIONAL: Cars needing service (useful in returnCar)
-    // @Query("""
-    //     SELECT c FROM Car c
-    //     WHERE c.mileage - c.lastServiceMileage >= 5000
-    // """)
-    // List<Car> findCarsDueForService();
+    @Query("""
+        SELECT c FROM Car c
+        WHERE c.mileage - c.lastServiceMileage >= 5000
+    """)
+    List<Car> findCarsDueForService();
  
  
     //  9.  OPTIONAL: Cars by condition (good/damaged)
