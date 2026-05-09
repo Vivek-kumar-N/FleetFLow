@@ -1,16 +1,27 @@
 package com.carcaddy.entity;
 
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
-@Table(name = "customer", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_customer_email", columnNames = "email_id"),
-        @UniqueConstraint(name = "uk_customer_dl", columnNames = "driving_license")
-})
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@Getter
+@Setter
+@Table(name = "customer")
 public class Customer {
 
     @Id
@@ -29,7 +40,7 @@ public class Customer {
 
     @NotBlank(message = "drivingLicense is required")
     @Size(min = 5, max = 255, message = "drivingLicense must be between 5 and 255 characters")
-    @Column(name = "driving_license", nullable = false)
+    @Column(name = "driving_license", nullable = false, unique = true)
     private String drivingLicense;
 
     @Size(max = 255, message = "occupation must be <= 255 characters")
@@ -43,7 +54,7 @@ public class Customer {
 
     @NotBlank(message = "emailId is required")
     @Email(message = "emailId must be a valid email")
-    @Column(name = "email_id", nullable = false)
+    @Column(name = "email_id", nullable = false, unique = true)
     private String emailId;
 
     @Column(name = "loyalty_points", nullable = true)
@@ -55,93 +66,11 @@ public class Customer {
     @Column(name = "blacklist_reason", nullable = true)
     private String blacklistReason;
 
-    // @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-    // @JsonManagedReference
-    // private List<Booking> bookings;
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<Booking> bookings;
 
-    public Customer() {
-    }
-
-    // Getters & Setters
-    public String getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(String customerId) {
-        this.customerId = customerId;
-    }
-
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
-    public String getContactNumber() {
-        return contactNumber;
-    }
-
-    public void setContactNumber(String contactNumber) {
-        this.contactNumber = contactNumber;
-    }
-
-    public String getDrivingLicense() {
-        return drivingLicense;
-    }
-
-    public void setDrivingLicense(String drivingLicense) {
-        this.drivingLicense = drivingLicense;
-    }
-
-    public String getOccupation() {
-        return occupation;
-    }
-
-    public void setOccupation(String occupation) {
-        this.occupation = occupation;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getEmailId() {
-        return emailId;
-    }
-
-    public void setEmailId(String emailId) {
-        this.emailId = emailId;
-    }
-
-    public Integer getLoyaltyPoints() {
-        return loyaltyPoints;
-    }
-
-    public void setLoyaltyPoints(Integer loyaltyPoints) {
-        this.loyaltyPoints = loyaltyPoints;
-    }
-
-    public Boolean getBlacklisted() {
-        return blacklisted;
-    }
-
-    public void setBlacklisted(Boolean blacklisted) {
-        this.blacklisted = blacklisted;
-    }
-
-    public String getBlacklistReason() {
-        return blacklistReason;
-    }
-
-    public void setBlacklistReason(String blacklistReason) {
-        this.blacklistReason = blacklistReason;
-    }
+   
 }
 
 
