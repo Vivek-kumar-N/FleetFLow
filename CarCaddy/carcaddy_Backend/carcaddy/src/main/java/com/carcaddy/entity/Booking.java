@@ -3,16 +3,21 @@ package com.carcaddy.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 //import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 //import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 //import jakarta.persistence.JoinColumn;
 //import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
@@ -72,15 +77,14 @@ public class Booking {
     private Double totalFare;
 
       
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "customer_id", nullable = false)
-    // private Customer customer;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
-    //  CAR MAPPING (registration_number is PK in Car table)
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "registration_number", referencedColumnName = "registration_number", nullable = false)
-    // @JsonBackReference
-    // private Car car;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "registration_number", referencedColumnName = "registration_number", nullable = false)
+    @JsonBackReference
+    private Car car;
 
     
 
