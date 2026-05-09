@@ -1,7 +1,5 @@
 package com.carcaddy.entity;
 
-public class Booking {
-
-  
+public class Customer {
 
 }

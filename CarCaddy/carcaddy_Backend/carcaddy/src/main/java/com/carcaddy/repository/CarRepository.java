@@ -1,5 +1,6 @@
 package com.carcaddy.repository;
 
-public class CarRepository {
+public interface CarRepository {
 
 }
+
