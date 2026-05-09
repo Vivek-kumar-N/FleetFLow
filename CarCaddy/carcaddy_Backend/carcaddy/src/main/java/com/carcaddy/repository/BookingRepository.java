@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -58,4 +60,41 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+
+        @Query("""
+        SELECT b.customer.customerId, COUNT(b)
+        FROM Booking b
+        GROUP BY b.customer.customerId
+        ORDER BY COUNT(b) DESC
+    """)
+    List<Object[]> getCustomersWithMaxBookings();
+
+
+    @Query("""
+        SELECT b.car.registrationNumber, COUNT(b)
+        FROM Booking b
+        GROUP BY b.car.registrationNumber
+        ORDER BY COUNT(b) ASC
+    """)
+    List<Object[]> getCarsWithMinimalBookings();
+
+
+    @Query("""
+        SELECT SUM(b.totalFare)
+        FROM Booking b
+        WHERE b.createdAt BETWEEN :startDate AND :endDate
+    """)
+    Double getRevenueBetweenDates(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+
+    @Query("""
+        SELECT b.car.registrationNumber, COUNT(b)
+        FROM Booking b
+        GROUP BY b.car.registrationNumber
+    """)
+    List<Object[]> getCarUtilization();
 }
