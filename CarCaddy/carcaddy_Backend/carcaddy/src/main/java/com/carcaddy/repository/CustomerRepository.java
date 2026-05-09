@@ -56,8 +56,25 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
     """)
     void redeemLoyaltyPoints(String customerId, int points);
 
+    
+
+    // No entity mapping required
+    @Query(value = """
+        SELECT customer_id
+        FROM booking
+        GROUP BY customer_id
+        ORDER BY COUNT(booking_id) DESC
+    """, nativeQuery = true)
+    List<String> findCustomerIdsWithMaximumBookings();
 
 
 
+    // Fetch booking IDs for a customer (used for history tracking)
+    @Query(value = """
+        SELECT booking_id
+        FROM booking
+        WHERE customer_id = :customerId
+    """, nativeQuery = true)
+    List<Long> findBookingIdsByCustomerId(String customerId);
  
 }
