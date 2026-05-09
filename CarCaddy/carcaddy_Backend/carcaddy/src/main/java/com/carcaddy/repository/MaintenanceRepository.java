@@ -2,6 +2,7 @@ package com.carcaddy.repository;
 
 import com.carcaddy.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -12,4 +13,10 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, Long> 
     List<Maintenance> findByMaintenanceType(MaintenanceType type);
 
     List<Maintenance> findByStatus(MaintenanceStatus status);
+
+    @Query("""
+    SELECT m.registrationNumber, SUM(m.cost)
+    FROM Maintenance m
+    GROUP BY m.registrationNumber""")
+    List<Object[]> getMaintenanceCostByCar();
 }
