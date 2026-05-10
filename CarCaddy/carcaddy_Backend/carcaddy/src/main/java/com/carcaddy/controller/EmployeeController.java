@@ -2,6 +2,9 @@ package com.carcaddy.controller;
 
 import com.carcaddy.entity.Employee;
 import com.carcaddy.service.EmployeeService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,11 +25,15 @@ public class EmployeeController {
     /* =========================================================
        1. Add new employee with auto‑generated default password
        ========================================================= */
-    @PostMapping
-    public ResponseEntity<Employee> addEmployee(@RequestBody Employee employee) {
-        Employee savedEmployee = employeeService.addEmployee(employee);
-        return new ResponseEntity<>(savedEmployee, HttpStatus.CREATED);
-    }
+  
+@PostMapping
+public ResponseEntity<Employee> addEmployee(
+        @Valid @RequestBody Employee employee) {
+    return new ResponseEntity<>(
+        employeeService.addEmployee(employee),
+        HttpStatus.CREATED
+    );
+}
 
     /* =========================================================
        2. Update employee contact number

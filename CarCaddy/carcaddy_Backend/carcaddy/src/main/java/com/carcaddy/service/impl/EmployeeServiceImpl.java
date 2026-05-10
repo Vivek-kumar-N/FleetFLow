@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -28,13 +29,18 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setAccountActive(true);
         employee.setFirstLogin(true);
         employee.setCreatedAt(LocalDateTime.now());
+String accountTypeLetter =
+        employee.getAccountType().substring(0, 1).toUpperCase();
 
-        // Auto‑generated default password (SRS logic)
-        String defaultPassword =
-                employee.getEmployeeName().substring(0, 4).toLowerCase()
-                        + employee.getDateOfBirth().getYear();
+String dob =
+        employee.getDateOfBirth()
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-        employee.setPassword(defaultPassword);
+int nameLength = employee.getEmployeeName().length();
+
+String defaultPassword = accountTypeLetter + dob + nameLength;
+
+employee.setPassword(defaultPassword);
 
         return employeeRepository.save(employee);
     }
