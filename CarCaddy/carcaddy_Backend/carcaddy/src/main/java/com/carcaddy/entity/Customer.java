@@ -66,9 +66,17 @@ public class Customer {
     @Column(name = "blacklist_reason", nullable = true)
     private String blacklistReason;
 
+
+    //Customer–Booking relationship
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<Booking> bookings;
+
+    //Customer–AppUser relationship
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private AppUser appUser;
+
 
    
 }
