@@ -22,6 +22,4 @@ public class AppUser {
 
     private String role;
 
-    // getters & setters
 }
-    
