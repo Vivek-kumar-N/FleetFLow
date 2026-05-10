@@ -22,19 +22,40 @@ public class EmployeeServiceImpl implements EmployeeService {
         this.emailService = emailService;
     }
 
+    // ✅ FIXED: Add employee without overriding valid incoming values
     @Override
     public Employee addEmployee(Employee employee) {
 
-        employee.setAccountActive(true);
-        employee.setFirstLogin(true);
-        employee.setCreatedAt(LocalDateTime.now());
+        // Set created time only if not provided
+        if (employee.getCreatedAt() == null) {
+            employee.setCreatedAt(LocalDateTime.now());
+        }
 
-        // Auto‑generated default password (SRS logic)
-        String defaultPassword =
-                employee.getEmployeeName().substring(0, 4).toLowerCase()
-                        + employee.getDateOfBirth().getYear();
+        // Default accountActive = true only if not explicitly set
+        if (employee.getAccountActive() == null) {
+            employee.setAccountActive(true);
+        }
 
-        employee.setPassword(defaultPassword);
+        // Default firstLogin = true only if not explicitly set
+        if (employee.getFirstLogin() == null) {
+            employee.setFirstLogin(true);
+        }
+
+        // Default password generation only if not provided
+        if (employee.getPassword() == null || employee.getPassword().isBlank()) {
+            String defaultPassword =
+                    employee.getEmployeeName().substring(0, 4).toLowerCase()
+                            + employee.getDateOfBirth().getYear();
+            employee.setPassword(defaultPassword);
+        }
+
+        // ✅ Auto‑deactivate immediately if expiry date is already past
+        if (employee.getExpiryDate() != null &&
+            employee.getExpiryDate().isBefore(LocalDate.now())) {
+
+            employee.setAccountActive(false);
+            employee.setFirstLogin(false);
+        }
 
         return employeeRepository.save(employee);
     }
@@ -50,7 +71,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void changePasswordOnFirstLogin(String emailId, String newPassword) {
 
         Employee employee = employeeRepository.findByEmailId(emailId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("Employee not found"));
 
         if (!employee.getFirstLogin()) {
             throw new RuntimeException("Password already changed");
@@ -75,7 +97,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Employee getEmployeeById(Long employeeId) {
         return employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("Employee not found"));
     }
 
     @Override
@@ -87,6 +110,13 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee setExpiryDate(Long employeeId, LocalDate expiryDate) {
         Employee employee = getEmployeeById(employeeId);
         employee.setExpiryDate(expiryDate);
+
+        // Optional: auto‑deactivate if expiry date set to past
+        if (expiryDate.isBefore(LocalDate.now())) {
+            employee.setAccountActive(false);
+            employee.setFirstLogin(false);
+        }
+
         return employeeRepository.save(employee);
     }
 
