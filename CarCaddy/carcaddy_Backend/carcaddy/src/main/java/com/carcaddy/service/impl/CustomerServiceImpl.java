@@ -20,14 +20,13 @@ import java.util.UUID;
 public class CustomerServiceImpl implements ICustomerService {
 
     private final CustomerRepository repository;
-    private static final Logger log =
-            LoggerFactory.getLogger(CustomerServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(CustomerServiceImpl.class);
 
     @Override
     public Customer addCustomer(CustomerDTO dto) {
         log.info("Adding new customer");
 
-        // REQUIRED by document: uniqueness validation
+        // uniqueness validation
         repository.findByEmailId(dto.getEmailId())
                 .ifPresent(c -> {
                     throw new InvalidEntityException(
@@ -60,8 +59,7 @@ public class CustomerServiceImpl implements ICustomerService {
     @Override
     public Customer updateCustomer(String id, CustomerDTO dto) {
         Customer customer = repository.findById(id)
-                .orElseThrow(() ->
-                        new InvalidEntityException("Customer ID " + id + " not found"));
+                .orElseThrow(() -> new InvalidEntityException("Customer ID " + id + " not found"));
 
         customer.setCustomerName(dto.getCustomerName());
         customer.setOccupation(dto.getOccupation());
@@ -74,8 +72,7 @@ public class CustomerServiceImpl implements ICustomerService {
     @Override
     public Customer updateContact(String id, String contact) {
         Customer customer = repository.findById(id)
-                .orElseThrow(() ->
-                        new InvalidEntityException("Customer ID " + id + " not found"));
+                .orElseThrow(() -> new InvalidEntityException("Customer ID " + id + " not found"));
 
         customer.setContactNumber(contact);
         return repository.save(customer);
@@ -89,8 +86,7 @@ public class CustomerServiceImpl implements ICustomerService {
     @Override
     public Customer getCustomerById(String id) {
         return repository.findById(id)
-                .orElseThrow(() ->
-                        new InvalidEntityException("Customer ID " + id + " not found"));
+                .orElseThrow(() -> new InvalidEntityException("Customer ID " + id + " not found"));
     }
 
     @Override
@@ -104,4 +100,13 @@ public class CustomerServiceImpl implements ICustomerService {
         customer.setBlacklisted(true);
         return repository.save(customer);
     }
+
+    @Override
+    public Integer getLoyaltyPoints(String customerId) {
+        Customer customer = repository.findById(customerId)
+                .orElseThrow(() -> new InvalidEntityException("Customer ID " + customerId + " not found"));
+
+        return customer.getLoyaltyPoints();
+    }
+
 }

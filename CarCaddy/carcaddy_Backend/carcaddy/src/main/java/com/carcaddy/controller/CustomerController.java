@@ -4,6 +4,7 @@ import com.carcaddy.dto.CustomerDTO;
 import com.carcaddy.entity.Customer;
 import com.carcaddy.service.ICustomerService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -21,10 +22,12 @@ public class CustomerController {
     private final ICustomerService service;
 
     // Add new customer
+
     @PostMapping
-    public ResponseEntity<Customer> addCustomer(@RequestBody CustomerDTO dto) {
+    public ResponseEntity<Customer> addCustomer(@Valid @RequestBody CustomerDTO dto) {
         return new ResponseEntity<>(service.addCustomer(dto), HttpStatus.CREATED);
     }
+
 
     // Update customer details
     @PutMapping("/{id}")
@@ -67,4 +70,12 @@ public class CustomerController {
     public Customer blacklist(@PathVariable String id) {
         return service.blacklistCustomer(id);
     }
+
+    
+    
+    @GetMapping("/{id}/loyalty-points")
+    public Integer getLoyaltyPoints(@PathVariable String id) {
+        return service.getLoyaltyPoints(id);
+    }
+
 }
