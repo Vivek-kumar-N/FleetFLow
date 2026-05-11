@@ -6,7 +6,10 @@ import com.carcaddy.dto.ReturnCarRequest;
 import com.carcaddy.entity.Booking;
 import com.carcaddy.service.IBookingService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -16,87 +19,139 @@ import java.util.List;
 @RequestMapping("/api/bookings")
 public class BookingController {
 
+    private static final Logger log = LoggerFactory.getLogger(BookingController.class);
+
     @Autowired
     private IBookingService bookingService;
 
-    //  1. Create Booking
+    //  1. CREATE BOOKING
     @PostMapping
-    public Booking createBooking(@RequestBody CreateBookingRequest request) {
-        System.out.println("touched");
-        return bookingService.createBooking(request);
+    public ResponseEntity<?> createBooking(@RequestBody CreateBookingRequest request) {
+        log.info("Create booking request received for customer {}", request.getCustomerId());
+
+        Booking booking = bookingService.createBooking(request);
+
+        return ResponseEntity.ok().body(booking);
     }
 
-    //  2. Modify Booking
+    //  2. MODIFY BOOKING
     @PutMapping("/{bookingId}")
-    public Booking modifyBooking(
+    public ResponseEntity<?> modifyBooking(
             @PathVariable Long bookingId,
             @RequestBody ModifyBookingRequest request) {
-        return bookingService.modifyBooking(bookingId, request);
+
+        log.info("Modify booking request for bookingId {}", bookingId);
+
+        Booking booking = bookingService.modifyBooking(bookingId, request);
+
+        return ResponseEntity.ok().body(booking);
     }
 
-    //  3. Cancel Booking
+    //  3. CANCEL BOOKING
     @DeleteMapping("/{bookingId}")
-    public String cancelBooking(@PathVariable Long bookingId) {
-        return bookingService.cancelBooking(bookingId);
+    public ResponseEntity<?> cancelBooking(@PathVariable Long bookingId) {
+
+        log.info("Cancel booking request for bookingId {}", bookingId);
+
+        String response = bookingService.cancelBooking(bookingId);
+
+        return ResponseEntity.ok().body(response);
     }
 
-    //  4. Return Car (Acknowledge Return)
+    //  4. RETURN CAR
     @PostMapping("/{bookingId}/return")
-    public Booking returnCar(
+    public ResponseEntity<?> returnCar(
             @PathVariable Long bookingId,
             @RequestBody ReturnCarRequest request) {
-        return bookingService.returnCar(bookingId, request);
+
+        log.info("Return car request for bookingId {}", bookingId);
+
+        Booking booking = bookingService.returnCar(bookingId, request);
+
+        return ResponseEntity.ok().body(booking);
     }
 
-    //  5. Check Car Availability
+    //  5. CHECK AVAILABILITY
     @GetMapping("/availability")
-    public boolean checkAvailability(
+    public ResponseEntity<?> checkAvailability(
             @RequestParam String registrationNumber,
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
 
-        return bookingService.checkCarAvailability(
+        log.info("Check availability for car {} from {} to {}", registrationNumber, startDate, endDate);
+
+        boolean available = bookingService.checkCarAvailability(
                 registrationNumber, startDate, endDate
         );
+
+        return ResponseEntity.ok().body(available);
     }
 
-    //  6. Get All Bookings
+    //  6. GET ALL BOOKINGS
     @GetMapping
-    public List<Booking> getAllBookings() {
-        return bookingService.getAllBookings();
+    public ResponseEntity<?> getAllBookings() {
+
+        log.info("Fetch all bookings request");
+
+        List<Booking> bookings = bookingService.getAllBookings();
+
+        return ResponseEntity.ok().body(bookings);
     }
 
-    //  7. Get Booking by ID
+    //  7. GET BOOKING BY ID
     @GetMapping("/{bookingId}")
-    public Booking getBookingById(@PathVariable Long bookingId) {
-        return bookingService.getBookingById(bookingId);
+    public ResponseEntity<?> getBookingById(@PathVariable Long bookingId) {
+
+        log.info("Fetch booking by ID {}", bookingId);
+
+        Booking booking = bookingService.getBookingById(bookingId);
+
+        return ResponseEntity.ok().body(booking);
     }
 
-    //  8. Get Bookings by Customer
+    //  8. GET BOOKINGS BY CUSTOMER
     @GetMapping("/customer/{customerId}")
-    public List<Booking> getBookingsByCustomer(
+    public ResponseEntity<?> getBookingsByCustomer(
             @PathVariable String customerId) {
-        return bookingService.getBookingsByCustomer(customerId);
+
+        log.info("Fetch bookings for customer {}", customerId);
+
+        List<Booking> bookings = bookingService.getBookingsByCustomer(customerId);
+
+        return ResponseEntity.ok().body(bookings);
     }
 
-    //  9. Get Bookings by Car
+    //  9. GET BOOKINGS BY CAR
     @GetMapping("/car/{registrationNumber}")
-    public List<Booking> getBookingsByCar(
+    public ResponseEntity<?> getBookingsByCar(
             @PathVariable String registrationNumber) {
-        return bookingService.getBookingsByCar(registrationNumber);
+
+        log.info("Fetch bookings for car {}", registrationNumber);
+
+        List<Booking> bookings = bookingService.getBookingsByCar(registrationNumber);
+
+        return ResponseEntity.ok().body(bookings);
     }
 
-    //  10. Get Active Bookings
+    //  10. GET ACTIVE BOOKINGS
     @GetMapping("/active")
-    public List<Booking> getActiveBookings() {
-        return bookingService.getActiveBookings();
+    public ResponseEntity<?> getActiveBookings() {
+
+        log.info("Fetch active bookings");
+
+        List<Booking> bookings = bookingService.getActiveBookings();
+
+        return ResponseEntity.ok().body(bookings);
     }
 
-    //  11. Get Completed Bookings
+    //  11. GET COMPLETED BOOKINGS
     @GetMapping("/completed")
-    public List<Booking> getCompletedBookings() {
-        return bookingService.getCompletedBookings();
+    public ResponseEntity<?> getCompletedBookings() {
+
+        log.info("Fetch completed bookings");
+
+        List<Booking> bookings = bookingService.getCompletedBookings();
+
+        return ResponseEntity.ok().body(bookings);
     }
-
 }
-
