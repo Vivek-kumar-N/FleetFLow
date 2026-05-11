@@ -2,11 +2,7 @@ package com.carcaddy.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -23,14 +19,10 @@ public class Maintenance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long maintenanceId;
 
-    @NotBlank(message = "Registration number is required")
-    private String registrationNumber;
-
     @Enumerated(EnumType.STRING)
-    private MaintenanceType maintenanceType; 
+    private MaintenanceType maintenanceType;
 
     private LocalDate scheduledDate;
-
     private LocalDate completedDate;
 
     private String description;
@@ -38,8 +30,13 @@ public class Maintenance {
     @Positive(message = "Cost must be positive")
     private double cost;
 
-    private String performedBy; 
+    private String performedBy;
 
     @Enumerated(EnumType.STRING)
-    private MaintenanceStatus status; 
+    private MaintenanceStatus status;
+
+
+    @ManyToOne
+    @JoinColumn(name = "registration_number")
+    private Car car;
 }
