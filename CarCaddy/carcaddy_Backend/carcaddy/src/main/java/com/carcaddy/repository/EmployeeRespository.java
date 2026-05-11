@@ -1,5 +1,4 @@
-
- package com.carcaddy.repository;
+package com.carcaddy.repository;
 
 import com.carcaddy.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +11,10 @@ public interface EmployeeRespository extends JpaRepository<Employee, Long> {
 
     Optional<Employee> findByEmailId(String emailId);
 
+    boolean existsByEmailId(String emailId);
+
+    boolean existsByContactNumber(String contactNumber);
+
     List<Employee> findByDesignation(String designation);
 
     List<Employee> findByAccountActive(Boolean accountActive);
@@ -21,6 +24,3 @@ public interface EmployeeRespository extends JpaRepository<Employee, Long> {
             Boolean accountActive
     );
 }
-
-
-
