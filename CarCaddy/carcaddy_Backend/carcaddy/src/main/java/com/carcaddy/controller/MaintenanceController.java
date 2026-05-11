@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/maintenance")
+@RequestMapping("/api/maintenance")
 @Slf4j
 public class MaintenanceController {
 
