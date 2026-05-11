@@ -3,8 +3,12 @@ package com.carcaddy.controller;
 import com.carcaddy.entity.Car;
 import com.carcaddy.entity.CarStatus;
 import com.carcaddy.service.ICarService;
+
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,22 +23,27 @@ public class CarController {
     private final ICarService carService;
 
     /* ---------------- ADD ---------------- */
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Car addCar(@RequestBody Car car) {
+    public Car addCar(@Valid @RequestBody Car car) {
+
         log.info("API request: Add car with registration number {}",
                 car.getRegistrationNumber());
+
         return carService.addCar(car);
     }
 
     /* ---------------- UPDATE ---------------- */
+
     @PutMapping("/{registrationNumber}")
     public Car updateCar(
             @PathVariable String registrationNumber,
-            @RequestBody Car car) {
+            @Valid @RequestBody Car car) {
 
         log.info("API request: Update car details for {}",
                 registrationNumber);
+
         return carService.updateCar(registrationNumber, car);
     }
 
@@ -45,6 +54,7 @@ public class CarController {
 
         log.info("API request: Update car status for {} to {}",
                 registrationNumber, status);
+
         return carService.updateCarStatus(registrationNumber, status);
     }
 
@@ -55,13 +65,17 @@ public class CarController {
 
         log.info("API request: Update mileage for {} to {}",
                 registrationNumber, mileage);
+
         return carService.updateMileageAfterRental(registrationNumber, mileage);
     }
 
     /* ---------------- FETCH ---------------- */
+
     @GetMapping
     public List<Car> getAllCars() {
+
         log.info("API request: Fetch all cars");
+
         return carService.getAllCars();
     }
 
@@ -71,6 +85,7 @@ public class CarController {
 
         log.info("API request: Fetch car with registration number {}",
                 registrationNumber);
+
         return carService.getCarByRegistrationNumber(registrationNumber);
     }
 
@@ -79,6 +94,7 @@ public class CarController {
 
         log.info("API request: Fetch cars by model {}",
                 model);
+
         return carService.getCarsByModel(model);
     }
 
@@ -87,6 +103,7 @@ public class CarController {
 
         log.info("API request: Fetch cars by category {}",
                 category);
+
         return carService.getCarsByCategory(category);
     }
 
@@ -95,6 +112,7 @@ public class CarController {
 
         log.info("API request: Fetch cars by status {}",
                 status);
+
         return carService.getCarsByStatus(status);
     }
 
@@ -102,6 +120,7 @@ public class CarController {
     public List<Car> getAvailableCars() {
 
         log.info("API request: Fetch available cars");
+
         return carService.getAvailableCars();
     }
 
@@ -109,6 +128,7 @@ public class CarController {
     public List<Car> getCarsRequiringMaintenance() {
 
         log.info("API request: Fetch cars requiring maintenance");
+
         return carService.getCarsRequiringMaintenance();
     }
 }
