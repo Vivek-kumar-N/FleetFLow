@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ReportsServiceImpl implements IReportsService {
@@ -36,455 +35,294 @@ public class ReportsServiceImpl implements IReportsService {
     @Autowired
     private EmployeeRespository employeeRepository;
 
-    // =========================================================
-    // CUSTOMERS WITH MAX BOOKINGS
-    // =========================================================
-
+    // 1. Customers with MAX bookings
     @Override
     public List<Customer> getCustomersWithMaxBookings() {
 
         logger.info("Generating customers with maximum bookings");
 
         List<Booking> bookings = bookingRepository.findAll();
+        Map<Customer, Integer> bookingCount = new HashMap<>();
 
-        Map<Customer, Long> bookingCountMap =
-                bookings.stream()
-                        .filter(b -> b.getCustomer() != null)
-                        .collect(Collectors.groupingBy(
-                                Booking::getCustomer,
-                                Collectors.counting()
-                        ));
+        for (Booking b : bookings) {
+            if (b.getCustomer() != null) {
+                Customer c = b.getCustomer();
+                bookingCount.put(c, bookingCount.getOrDefault(c, 0) + 1);
+            }
+        }
 
-        long maxBookings =
-                bookingCountMap.values()
-                        .stream()
-                        .max(Long::compare)
-                        .orElse(0L);
+        int max = 0;
+        for (int count : bookingCount.values()) {
+            if (count > max) {
+                max = count;
+            }
+        }
 
-        return bookingCountMap.entrySet()
-                .stream()
-                .filter(entry -> entry.getValue() == maxBookings)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+        List<Customer> result = new ArrayList<>();
+        for (Map.Entry<Customer, Integer> entry : bookingCount.entrySet()) {
+            if (entry.getValue() == max) {
+                result.add(entry.getKey());
+            }
+        }
+
+        return result;
     }
 
-    // =========================================================
-    // CARS WITH MINIMAL BOOKINGS
-    // =========================================================
-
+    // 2. Cars with MIN bookings
     @Override
     public Map<String, Long> getCarsWithMinimalBookings() {
 
         logger.info("Generating cars with minimal bookings");
 
         List<Car> cars = carRepository.findAll();
-
         Map<String, Long> result = new LinkedHashMap<>();
 
         for (Car car : cars) {
+            long count = bookingRepository
+                    .findByCar_RegistrationNumber(car.getRegistrationNumber())
+                    .size();
 
-            long count =
-                    bookingRepository
-                            .findByCar_RegistrationNumber(
-                                    car.getRegistrationNumber()
-                            )
-                            .size();
-
-            result.put(
-                    car.getRegistrationNumber()
-                            + " (" + car.getModel() + ")",
-                    count
-            );
+            String key = car.getRegistrationNumber() + " (" + car.getModel() + ")";
+            result.put(key, count);
         }
 
-        return result.entrySet()
-                .stream()
-                .sorted(Map.Entry.comparingByValue())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (a, b) -> a,
-                        LinkedHashMap::new
-                ));
+        List<Map.Entry<String, Long>> list = new ArrayList<>(result.entrySet());
+        list.sort(Map.Entry.comparingByValue());
+
+        Map<String, Long> sortedResult = new LinkedHashMap<>();
+        for (Map.Entry<String, Long> entry : list) {
+            sortedResult.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedResult;
     }
 
-    // =========================================================
-    // INCOME BY CAR MODEL
-    // =========================================================
-
+    // 3. Income by car model
     @Override
     public Map<String, BigDecimal> getIncomeByCarModel() {
 
         logger.info("Generating income by car model");
 
         List<Booking> bookings = bookingRepository.findAll();
-
         Map<String, BigDecimal> result = new HashMap<>();
 
-        for (Booking booking : bookings) {
+        for (Booking b : bookings) {
 
-            if (booking.getCar() != null &&
-                    booking.getTotalFare() != null) {
+            if (b.getCar() != null && b.getTotalFare() != null) {
 
-                String model =
-                        booking.getCar().getModel();
+                String model = b.getCar().getModel();
+                BigDecimal fare = BigDecimal.valueOf(b.getTotalFare());
 
-                BigDecimal fare =
-                        BigDecimal.valueOf(
-                                booking.getTotalFare()
-                        );
-
-                result.merge(
-                        model,
-                        fare,
-                        BigDecimal::add
-                );
+                result.put(model,
+                        result.getOrDefault(model, BigDecimal.ZERO).add(fare));
             }
         }
 
         return result;
     }
 
-    // =========================================================
-    // REVENUE FOR PERIOD
-    // =========================================================
-
+    // 4. Revenue between dates
     @Override
-    public BigDecimal getRevenueForPeriod(
-            LocalDate startDate,
-            LocalDate endDate
-    ) {
+    public BigDecimal getRevenueForPeriod(LocalDate startDate, LocalDate endDate) {
 
         logger.info("Generating revenue report");
 
-        List<Booking> bookings =
-                bookingRepository.findAll();
+        List<Booking> bookings = bookingRepository.findAll();
+        BigDecimal total = BigDecimal.ZERO;
 
-        return bookings.stream()
-                .filter(b ->
-                        b.getCreatedAt() != null &&
-                        !b.getCreatedAt().toLocalDate()
-                                .isBefore(startDate) &&
-                        !b.getCreatedAt().toLocalDate()
-                                .isAfter(endDate)
-                )
-                .map(b -> BigDecimal.valueOf(
-                        Optional.ofNullable(
-                                b.getTotalFare()
-                        ).orElse(0.0)
-                ))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        for (Booking b : bookings) {
+
+            if (b.getCreatedAt() != null) {
+
+                LocalDate date = b.getCreatedAt().toLocalDate();
+
+                if (!date.isBefore(startDate) && !date.isAfter(endDate)) {
+
+                    double fare = (b.getTotalFare() != null) ? b.getTotalFare() : 0.0;
+                    total = total.add(BigDecimal.valueOf(fare));
+                }
+            }
+        }
+
+        return total;
     }
 
-    // =========================================================
-    // MAINTENANCE COST BY CAR MODEL
-    // =========================================================
-
+    // 5. Maintenance cost by car model
     @Override
-    public Map<String, BigDecimal>
-    getMaintenanceCostByCarModel() {
+    public Map<String, BigDecimal> getMaintenanceCostByCarModel() {
 
         logger.info("Generating maintenance cost by car model");
 
-        List<Maintenance> maintenanceList =
-                maintenanceRepository.findAll();
+        List<Maintenance> list = maintenanceRepository.findAll();
+        Map<String, BigDecimal> result = new HashMap<>();
 
-        Map<String, BigDecimal> result =
-                new HashMap<>();
+        for (Maintenance m : list) {
 
-        for (Maintenance maintenance : maintenanceList) {
+            Optional<Car> car = carRepository.findById(m.getCar().getRegistrationNumber());
 
-            Optional<Car> optionalCar =
-                    carRepository.findById(
-                            maintenance.getRegistrationNumber()
-                    );
+            if (car.isPresent()) {
 
-            if (optionalCar.isPresent()) {
+                String model = car.get().getModel();
+                BigDecimal cost = BigDecimal.valueOf(m.getCost());
 
-                String model =
-                        optionalCar.get().getModel();
-
-                BigDecimal cost =
-                        BigDecimal.valueOf(
-                                maintenance.getCost()
-                        );
-
-                result.merge(
-                        model,
-                        cost,
-                        BigDecimal::add
-                );
+                result.put(model,
+                        result.getOrDefault(model, BigDecimal.ZERO).add(cost));
             }
         }
 
         return result;
     }
 
-    // =========================================================
-    // MAINTENANCE COST BY PERIOD
-    // =========================================================
-
+    // 6. Maintenance by period
     @Override
-    public Map<String, BigDecimal>
-    getMaintenanceCostByPeriod(
-            LocalDate startDate,
-            LocalDate endDate
-    ) {
+    public Map<String, BigDecimal> getMaintenanceCostByPeriod(LocalDate startDate, LocalDate endDate) {
 
         logger.info("Generating maintenance cost by period");
 
-        List<Maintenance> maintenanceList =
-                maintenanceRepository.findAll();
+        List<Maintenance> list = maintenanceRepository.findAll();
+        Map<String, BigDecimal> result = new HashMap<>();
 
-        Map<String, BigDecimal> result =
-                new HashMap<>();
+        for (Maintenance m : list) {
 
-        for (Maintenance maintenance : maintenanceList) {
+            if (m.getScheduledDate() != null) {
 
-            if (maintenance.getScheduledDate() != null &&
-                    !maintenance.getScheduledDate()
-                            .isBefore(startDate) &&
-                    !maintenance.getScheduledDate()
-                            .isAfter(endDate)) {
+                LocalDate date = m.getScheduledDate();
 
-                String key =
-                        maintenance.getScheduledDate()
-                                .getYear()
-                                + "-"
-                                + maintenance.getScheduledDate()
-                                .getMonthValue();
+                if (!date.isBefore(startDate) && !date.isAfter(endDate)) {
 
-                result.merge(
-                        key,
-                        BigDecimal.valueOf(
-                                maintenance.getCost()
-                        ),
-                        BigDecimal::add
-                );
+                    String key = date.getYear() + "-" + date.getMonthValue();
+                    BigDecimal cost = BigDecimal.valueOf(m.getCost());
+
+                    result.put(key,
+                            result.getOrDefault(key, BigDecimal.ZERO).add(cost));
+                }
             }
         }
 
         return result;
     }
 
-    // =========================================================
-    // DASHBOARD
-    // =========================================================
-
+    // 7. Dashboard stats
     @Override
-    public Map<String, Object>
-    getDashboardStatistics() {
+    public Map<String, Object> getDashboardStatistics() {
 
         logger.info("Generating dashboard statistics");
 
-        Map<String, Object> stats =
-                new HashMap<>();
+        Map<String, Object> stats = new HashMap<>();
 
-        stats.put(
-                "totalEmployees",
-                employeeRepository.count()
-        );
-
-        stats.put(
-                "totalCars",
-                carRepository.count()
-        );
-
-        stats.put(
-                "totalCustomers",
-                customerRepository.count()
-        );
-
-        stats.put(
-                "totalRentals",
-                bookingRepository.count()
-        );
-
-        stats.put(
-                "totalMaintenanceRecords",
-                maintenanceRepository.count()
-        );
+        stats.put("totalEmployees", employeeRepository.count());
+        stats.put("totalCars", carRepository.count());
+        stats.put("totalCustomers", customerRepository.count());
+        stats.put("totalRentals", bookingRepository.count());
+        stats.put("totalMaintenanceRecords", maintenanceRepository.count());
 
         return stats;
     }
 
-    // =========================================================
-    // CAR UTILIZATION
-    // =========================================================
-
+    // 8. Car utilization
     @Override
-    public Map<String, Long>
-    getCarUtilizationReport() {
+    public Map<String, Long> getCarUtilizationReport() {
 
         logger.info("Generating car utilization report");
 
-        Map<String, Long> result =
-                new LinkedHashMap<>();
-
         List<Car> cars = carRepository.findAll();
+        Map<String, Long> result = new LinkedHashMap<>();
 
         for (Car car : cars) {
 
-            long completedBookings =
-                    bookingRepository
-                            .findByCar_RegistrationNumber(
-                                    car.getRegistrationNumber()
-                            )
-                            .stream()
-                            .filter(b ->
-                                    b.getBookingStatus()
-                                            == BookingStatus.COMPLETED
-                            )
-                            .count();
+            List<Booking> bookings = bookingRepository
+                    .findByCar_RegistrationNumber(car.getRegistrationNumber());
 
-            result.put(
-                    car.getRegistrationNumber(),
-                    completedBookings
-            );
+            long count = 0;
+
+            for (Booking b : bookings) {
+                if (b.getBookingStatus() == BookingStatus.COMPLETED) {
+                    count++;
+                }
+            }
+
+            result.put(car.getRegistrationNumber(), count);
         }
 
         return result;
     }
 
-    // =========================================================
-    // CUSTOMER LOYALTY
-    // =========================================================
-
+    // 9. Customer loyalty analytics
     @Override
-    public Map<String, Object>
-    getCustomerLoyaltyAnalytics() {
+    public Map<String, Object> getCustomerLoyaltyAnalytics() {
 
         logger.info("Generating customer loyalty analytics");
 
-        List<Customer> customers =
-                customerRepository.findAll();
+        List<Customer> customers = customerRepository.findAll();
 
-        Map<String, Object> result =
-                new HashMap<>();
+        int totalPoints = 0;
 
-        int totalPoints =
-                customers.stream()
-                        .mapToInt(c ->
-                                Optional.ofNullable(
-                                        c.getLoyaltyPoints()
-                                ).orElse(0)
-                        )
-                        .sum();
+        for (Customer c : customers) {
+            totalPoints += (c.getLoyaltyPoints() != null) ? c.getLoyaltyPoints() : 0;
+        }
 
-        double avgPoints =
-                customers.stream()
-                        .mapToInt(c ->
-                                Optional.ofNullable(
-                                        c.getLoyaltyPoints()
-                                ).orElse(0)
-                        )
-                        .average()
-                        .orElse(0);
+        double avg = customers.size() == 0 ? 0 : (double) totalPoints / customers.size();
 
+        Map<String, Object> result = new HashMap<>();
         result.put("totalCustomers", customers.size());
-
         result.put("totalLoyaltyPoints", totalPoints);
-
-        result.put("averageLoyaltyPoints", avgPoints);
+        result.put("averageLoyaltyPoints", avg);
 
         return result;
     }
 
-    // =========================================================
-    // PROFITABILITY REPORT
-    // =========================================================
-
+    // 10. Profitability
     @Override
-    public Map<String, BigDecimal>
-    getProfitabilityReport() {
+    public Map<String, BigDecimal> getProfitabilityReport() {
 
         logger.info("Generating profitability report");
 
-        Map<String, BigDecimal> income =
-                getIncomeByCarModel();
+        Map<String, BigDecimal> income = getIncomeByCarModel();
+        Map<String, BigDecimal> maintenance = getMaintenanceCostByCarModel();
 
-        Map<String, BigDecimal> maintenance =
-                getMaintenanceCostByCarModel();
-
-        Map<String, BigDecimal> result =
-                new HashMap<>();
+        Map<String, BigDecimal> result = new HashMap<>();
 
         for (String model : income.keySet()) {
 
-            BigDecimal revenue =
-                    income.getOrDefault(
-                            model,
-                            BigDecimal.ZERO
-                    );
+            BigDecimal revenue = income.getOrDefault(model, BigDecimal.ZERO);
+            BigDecimal cost = maintenance.getOrDefault(model, BigDecimal.ZERO);
 
-            BigDecimal maintenanceCost =
-                    maintenance.getOrDefault(
-                            model,
-                            BigDecimal.ZERO
-                    );
-
-            result.put(
-                    model,
-                    revenue.subtract(maintenanceCost)
-            );
+            result.put(model, revenue.subtract(cost));
         }
 
         return result;
     }
 
-    // =========================================================
-    // FLEET HEALTH
-    // =========================================================
-
+    // 11. Fleet health
     @Override
-    public Map<String, Object>
-    getFleetHealthReport() {
+    public Map<String, Object> getFleetHealthReport() {
 
         logger.info("Generating fleet health report");
 
         List<Car> cars = carRepository.findAll();
 
-        long availableCars =
-                cars.stream()
-                        .filter(c ->
-                                c.getStatus()
-                                        == CarStatus.AVAILABLE
-                        )
-                        .count();
+        int available = 0, rented = 0, maintenance = 0;
 
-        long rentedCars =
-                cars.stream()
-                        .filter(c ->
-                                c.getStatus()
-                                        == CarStatus.RENTED
-                        )
-                        .count();
+        for (Car c : cars) {
 
-        long maintenanceCars =
-                cars.stream()
-                        .filter(c ->
-                                c.getStatus()
-                                        == CarStatus.MAINTENANCE
-                        )
-                        .count();
+            if (c.getStatus() == CarStatus.AVAILABLE) {
+                available++;
+            } else if (c.getStatus() == CarStatus.RENTED) {
+                rented++;
+            } else if (c.getStatus() == CarStatus.MAINTENANCE) {
+                maintenance++;
+            }
+        }
 
-        Map<String, Object> result =
-                new HashMap<>();
+        double utilization = cars.size() == 0 ? 0 : (double) rented / cars.size() * 100;
+
+        Map<String, Object> result = new HashMap<>();
 
         result.put("totalCars", cars.size());
-
-        result.put("availableCars", availableCars);
-
-        result.put("rentedCars", rentedCars);
-
-        result.put("maintenanceCars", maintenanceCars);
-
-        result.put(
-                "fleetUtilization",
-                cars.size() == 0
-                        ? 0
-                        : ((double) rentedCars / cars.size()) * 100
-        );
+        result.put("availableCars", available);
+        result.put("rentedCars", rented);
+        result.put("maintenanceCars", maintenance);
+        result.put("fleetUtilization", utilization);
 
         return result;
     }
