@@ -11,9 +11,11 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
- 
+
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "car")
 @Getter
@@ -72,6 +74,7 @@ public class Car {
     private CarStatus status;
  
     @OneToMany(mappedBy = "car", cascade = CascadeType.ALL)
+    @JsonIgnore
     @JsonManagedReference
     private List<Booking> bookings;
 }
