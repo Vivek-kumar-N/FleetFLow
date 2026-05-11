@@ -2,8 +2,10 @@ package com.carcaddy.controller;
 
 import com.carcaddy.entity.Employee;
 import com.carcaddy.service.EmployeeService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -13,40 +15,36 @@ import java.util.List;
 @RequestMapping("/api/employees")
 public class EmployeeController {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(EmployeeController.class);
+
     private final EmployeeService employeeService;
 
     public EmployeeController(EmployeeService employeeService) {
         this.employeeService = employeeService;
     }
 
-    /* =========================================================
-       1. Add new employee with auto‑generated default password
-       ========================================================= */
     @PostMapping
-    public ResponseEntity<Employee> addEmployee(@RequestBody Employee employee) {
+    public ResponseEntity<Employee> addEmployee(
+            @Valid @RequestBody Employee employee) {
+
+        logger.info("Add employee request received");
         Employee savedEmployee = employeeService.addEmployee(employee);
         return new ResponseEntity<>(savedEmployee, HttpStatus.CREATED);
     }
 
-    /* =========================================================
-       2. Update employee contact number
-       ========================================================= */
     @PutMapping("/{id}/contact")
     public ResponseEntity<Employee> updateContactNumber(
-            @PathVariable("id") Long employeeId,
+            @PathVariable Long id,
             @RequestParam String contactNumber) {
 
-        Employee updatedEmployee =
-                employeeService.updateContactNumber(employeeId, contactNumber);
-
-        return ResponseEntity.ok(updatedEmployee);
+        return ResponseEntity.ok(
+                employeeService.updateContactNumber(id, contactNumber)
+        );
     }
 
-    /* =========================================================
-       3. Change password on first login
-       ========================================================= */
     @PutMapping("/change-password")
-    public ResponseEntity<String> changePasswordOnFirstLogin(
+    public ResponseEntity<String> changePassword(
             @RequestParam String emailId,
             @RequestParam String newPassword) {
 
@@ -54,71 +52,38 @@ public class EmployeeController {
         return ResponseEntity.ok("Password changed successfully");
     }
 
-    /* =========================================================
-       4. Delete employee account
-       ========================================================= */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteEmployee(
-            @PathVariable("id") Long employeeId) {
-
-        employeeService.deleteEmployee(employeeId);
+    public ResponseEntity<String> deleteEmployee(@PathVariable Long id) {
+        employeeService.deleteEmployee(id);
         return ResponseEntity.ok("Employee deleted successfully");
     }
 
-    /* =========================================================
-       5. View all employees
-       ========================================================= */
     @GetMapping
-    public ResponseEntity<List<Employee>> getAllEmployees() {
-        return ResponseEntity.ok(employeeService.getAllEmployees());
+    public List<Employee> getAllEmployees() {
+        return employeeService.getAllEmployees();
     }
 
-    /* =========================================================
-       6. View employee by ID
-       ========================================================= */
     @GetMapping("/{id}")
-    public ResponseEntity<Employee> getEmployeeById(
-            @PathVariable("id") Long employeeId) {
-
-        return ResponseEntity.ok(employeeService.getEmployeeById(employeeId));
+    public Employee getEmployeeById(@PathVariable Long id) {
+        return employeeService.getEmployeeById(id);
     }
 
-    /* =========================================================
-       7. View employees by designation
-       ========================================================= */
     @GetMapping("/designation/{designation}")
-    public ResponseEntity<List<Employee>> getEmployeesByDesignation(
+    public List<Employee> getEmployeesByDesignation(
             @PathVariable String designation) {
-
-        return ResponseEntity.ok(
-                employeeService.getEmployeesByDesignation(designation)
-        );
+        return employeeService.getEmployeesByDesignation(designation);
     }
 
-    /* =========================================================
-       8. Set expiry date for temporary employees
-       ========================================================= */
     @PutMapping("/{id}/expiry")
-    public ResponseEntity<Employee> setExpiryDate(
-            @PathVariable("id") Long employeeId,
+    public Employee setExpiryDate(
+            @PathVariable Long id,
             @RequestParam LocalDate expiryDate) {
-
-        Employee employee =
-                employeeService.setExpiryDate(employeeId, expiryDate);
-
-        return ResponseEntity.ok(employee);
+        return employeeService.setExpiryDate(id, expiryDate);
     }
 
-    /* =========================================================
-       9. Auto‑deactivate expired temporary employees
-       (Can be called manually or via scheduler)
-       ========================================================= */
     @PutMapping("/auto-deactivate")
-    public ResponseEntity<String> autoDeactivateExpiredEmployees() {
-
+    public ResponseEntity<String> autoDeactivate() {
         employeeService.autoDeactivateExpiredEmployees();
-        return ResponseEntity.ok(
-                "Expired temporary employee accounts deactivated successfully"
-        );
+        return ResponseEntity.ok("Expired accounts deactivated successfully");
     }
 }

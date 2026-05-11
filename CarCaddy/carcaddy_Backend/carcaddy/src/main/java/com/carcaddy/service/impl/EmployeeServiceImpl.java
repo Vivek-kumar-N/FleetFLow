@@ -1,17 +1,24 @@
 package com.carcaddy.service.impl;
 
 import com.carcaddy.entity.Employee;
+import com.carcaddy.exception.InvalidEntityException;
 import com.carcaddy.repository.EmployeeRespository;
 import com.carcaddy.service.EmailService;
 import com.carcaddy.service.EmployeeService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(EmployeeServiceImpl.class);
 
     private final EmployeeRespository employeeRepository;
     private final EmailService emailService;
@@ -22,41 +29,52 @@ public class EmployeeServiceImpl implements EmployeeService {
         this.emailService = emailService;
     }
 
-    // ✅ FIXED: Add employee without overriding valid incoming values
     @Override
     public Employee addEmployee(Employee employee) {
 
-        // Set created time only if not provided
+        logger.info("Attempting to add employee with email {}", employee.getEmailId());
+
+        // ✅ Duplicate checks
+        if (employeeRepository.existsByEmailId(employee.getEmailId())) {
+            throw new InvalidEntityException(
+                "Employee with email " + employee.getEmailId() + " already exists"
+            );
+        }
+
+        if (employeeRepository.existsByContactNumber(employee.getContactNumber())) {
+            throw new InvalidEntityException(
+                "Employee with contact number " + employee.getContactNumber() + " already exists"
+            );
+        }
+
         if (employee.getCreatedAt() == null) {
             employee.setCreatedAt(LocalDateTime.now());
         }
 
-        // Default accountActive = true only if not explicitly set
         if (employee.getAccountActive() == null) {
             employee.setAccountActive(true);
         }
 
-        // Default firstLogin = true only if not explicitly set
         if (employee.getFirstLogin() == null) {
             employee.setFirstLogin(true);
         }
 
-        // Default password generation only if not provided
         if (employee.getPassword() == null || employee.getPassword().isBlank()) {
             String defaultPassword =
-                    employee.getEmployeeName().substring(0, 4).toLowerCase()
-                            + employee.getDateOfBirth().getYear();
+                    employee.getAccountType().substring(0, 1).toUpperCase()
+                            + employee.getDateOfBirth()
+                                .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                            + employee.getEmployeeName().length();
             employee.setPassword(defaultPassword);
         }
 
-        // ✅ Auto‑deactivate immediately if expiry date is already past
         if (employee.getExpiryDate() != null &&
             employee.getExpiryDate().isBefore(LocalDate.now())) {
-
             employee.setAccountActive(false);
             employee.setFirstLogin(false);
         }
 
+        logger.info("Employee added successfully");
         return employeeRepository.save(employee);
     }
 
@@ -72,10 +90,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Employee employee = employeeRepository.findByEmailId(emailId)
                 .orElseThrow(() ->
-                        new RuntimeException("Employee not found"));
+                        new InvalidEntityException("Employee with email " + emailId + " not found")
+                );
 
         if (!employee.getFirstLogin()) {
-            throw new RuntimeException("Password already changed");
+            throw new InvalidEntityException("Password already changed");
         }
 
         employee.setPassword(newPassword);
@@ -98,7 +117,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee getEmployeeById(Long employeeId) {
         return employeeRepository.findById(employeeId)
                 .orElseThrow(() ->
-                        new RuntimeException("Employee not found"));
+                        new InvalidEntityException(
+                            "Employee Id " + employeeId + " is not found")
+                );
     }
 
     @Override
@@ -111,7 +132,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = getEmployeeById(employeeId);
         employee.setExpiryDate(expiryDate);
 
-        // Optional: auto‑deactivate if expiry date set to past
         if (expiryDate.isBefore(LocalDate.now())) {
             employee.setAccountActive(false);
             employee.setFirstLogin(false);
