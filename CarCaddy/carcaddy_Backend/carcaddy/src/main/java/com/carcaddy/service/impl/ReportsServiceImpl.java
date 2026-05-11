@@ -17,8 +17,7 @@ import java.util.*;
 @Service
 public class ReportsServiceImpl implements IReportsService {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(ReportsServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReportsServiceImpl.class);
 
     @Autowired
     private CustomerRepository customerRepository;
@@ -28,6 +27,9 @@ public class ReportsServiceImpl implements IReportsService {
 
     @Autowired
     private BookingRepository bookingRepository;
+
+    @Autowired
+    private ReportRepository reportRepository;
 
     @Autowired
     private MaintenanceRepository maintenanceRepository;
@@ -206,15 +208,19 @@ public class ReportsServiceImpl implements IReportsService {
     @Override
     public Map<String, Object> getDashboardStatistics() {
 
-        logger.info("Generating dashboard statistics");
+        logger.info("Generating dashboard statistics (centralized query)");
+
+        Object result = reportRepository.getDashboardStats();
+
+        Object[] data = (Object[]) result;
 
         Map<String, Object> stats = new HashMap<>();
 
-        stats.put("totalEmployees", employeeRepository.count());
-        stats.put("totalCars", carRepository.count());
-        stats.put("totalCustomers", customerRepository.count());
-        stats.put("totalRentals", bookingRepository.count());
-        stats.put("totalMaintenanceRecords", maintenanceRepository.count());
+        stats.put("totalEmployees", data[0]);
+        stats.put("totalCars", data[1]);
+        stats.put("totalCustomers", data[2]);
+        stats.put("totalRentals", data[3]);
+        stats.put("totalMaintenanceRecords", data[4]);
 
         return stats;
     }
