@@ -23,6 +23,7 @@ public class MaintenanceController {
         this.service = service;
     }
 
+    //Add Maintenance
     @PostMapping
     public ResponseEntity<MaintenanceDto> add(
             @Valid @RequestBody MaintenanceDto dto) {
@@ -32,6 +33,7 @@ public class MaintenanceController {
         return ResponseEntity.status(201).body(service.addMaintenance(dto));
     }
 
+    //Routine Maintenance
     @PostMapping("/routine")
     public ResponseEntity<MaintenanceDto> routine(
             @Valid @RequestBody MaintenanceDto dto) {
@@ -41,6 +43,7 @@ public class MaintenanceController {
         return ResponseEntity.status(201).body(service.scheduleRoutineMaintenance(dto));
     }
 
+    //Emergency Maintenance
     @PostMapping("/emergency")
     public ResponseEntity<MaintenanceDto> emergency(
             @Valid @RequestBody MaintenanceDto dto) {
@@ -50,6 +53,23 @@ public class MaintenanceController {
         return ResponseEntity.status(201).body(service.addEmergencyMaintenance(dto));
     }
 
+
+    
+
+    // Update Status
+    @PutMapping("/{id}/status")
+    public ResponseEntity<MaintenanceDto> updateStatus(
+            @PathVariable Long id,
+            @RequestParam MaintenanceStatus status) {
+
+        log.info("API: Updating maintenance ID {} to status {}", id, status);
+
+        return ResponseEntity.ok(service.updateStatus(id, status));
+    }
+
+
+
+    //Get all
     @GetMapping
     public ResponseEntity<List<MaintenanceDto>> getAll() {
 
@@ -58,6 +78,7 @@ public class MaintenanceController {
         return ResponseEntity.ok(service.getAll());
     }
 
+    //Get by car
     @GetMapping("/car/{regNumber}")
     public ResponseEntity<List<MaintenanceDto>> getByReg(
             @PathVariable String regNumber) {
@@ -67,6 +88,32 @@ public class MaintenanceController {
         return ResponseEntity.ok(service.getByRegNumber(regNumber));
     }
 
+
+
+    //  Get By Type
+    @GetMapping("/type")
+    public ResponseEntity<List<MaintenanceDto>> getByType(
+            @RequestParam MaintenanceType type) {
+
+        log.info("API: Fetching maintenance records by type {}", type);
+
+        return ResponseEntity.ok(service.getByType(type));
+    }
+
+
+
+    //  Get By Status
+    @GetMapping("/status")
+    public ResponseEntity<List<MaintenanceDto>> getByStatus(
+            @RequestParam MaintenanceStatus status) {
+
+        log.info("API: Fetching maintenance records by status {}", status);
+
+        return ResponseEntity.ok(service.getByStatus(status));
+    }
+
+
+    //Upcoming
     @GetMapping("/upcoming")
     public ResponseEntity<List<MaintenanceDto>> upcoming() {
 
@@ -75,6 +122,7 @@ public class MaintenanceController {
         return ResponseEntity.ok(service.getUpcomingMaintenance());
     }
 
+    //Overdue
     @GetMapping("/overdue")
     public ResponseEntity<List<MaintenanceDto>> overdue() {
 
@@ -83,6 +131,7 @@ public class MaintenanceController {
         return ResponseEntity.ok(service.getOverdueMaintenance());
     }
 
+    //Total cost
     @GetMapping("/cost/{regNumber}")
     public ResponseEntity<Double> cost(
             @PathVariable String regNumber) {
@@ -92,6 +141,7 @@ public class MaintenanceController {
         return ResponseEntity.ok(service.getTotalCostByCar(regNumber));
     }
 
+    //Date range
     @GetMapping("/range")
     public ResponseEntity<List<MaintenanceDto>> range(
             @RequestParam LocalDate start,
@@ -101,4 +151,26 @@ public class MaintenanceController {
 
         return ResponseEntity.ok(service.getByDateRange(start, end));
     }
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity<MaintenanceDto> getById(@PathVariable Long id) {
+    
+        log.info("API: Fetching maintenance by ID {}", id);
+    
+        return ResponseEntity.ok(service.getById(id));
+    }   
+    
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> delete(@PathVariable Long id) {
+    
+        log.info("API: Deleting maintenance with ID {}", id);
+    
+        service.delete(id);
+    
+        return ResponseEntity.ok("Maintenance deleted successfully");
+    }
+    
 }
