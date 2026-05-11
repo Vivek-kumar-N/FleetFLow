@@ -210,8 +210,8 @@ public class ReportsServiceImpl implements IReportsService {
 
         logger.info("Generating dashboard statistics (centralized query)");
 
+        
         Object result = reportRepository.getDashboardStats();
-
         Object[] data = (Object[]) result;
 
         Map<String, Object> stats = new HashMap<>();
@@ -223,6 +223,7 @@ public class ReportsServiceImpl implements IReportsService {
         stats.put("totalMaintenanceRecords", data[4]);
 
         return stats;
+
     }
 
     // 8. Car utilization
