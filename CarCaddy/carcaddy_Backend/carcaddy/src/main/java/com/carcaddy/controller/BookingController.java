@@ -6,6 +6,8 @@ import com.carcaddy.dto.ReturnCarRequest;
 import com.carcaddy.entity.Booking;
 import com.carcaddy.service.IBookingService;
 
+import jakarta.validation.Valid;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +28,7 @@ public class BookingController {
 
     //  1. CREATE BOOKING
     @PostMapping
-    public ResponseEntity<?> createBooking(@RequestBody CreateBookingRequest request) {
+    public ResponseEntity<?> createBooking(@Valid @RequestBody CreateBookingRequest request) {
         log.info("Create booking request received for customer {}", request.getCustomerId());
 
         Booking booking = bookingService.createBooking(request);
@@ -38,7 +40,7 @@ public class BookingController {
     @PutMapping("/{bookingId}")
     public ResponseEntity<?> modifyBooking(
             @PathVariable Long bookingId,
-            @RequestBody ModifyBookingRequest request) {
+            @Valid @RequestBody ModifyBookingRequest request) {
 
         log.info("Modify booking request for bookingId {}", bookingId);
 
