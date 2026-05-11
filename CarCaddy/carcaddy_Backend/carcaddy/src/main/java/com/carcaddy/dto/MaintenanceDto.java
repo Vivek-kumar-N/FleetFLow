@@ -40,7 +40,6 @@ public class MaintenanceDto {
     @Size(max = 100, message = "PerformedBy should not exceed 100 characters")
     private String performedBy;
 
-    //  Enum required
-    @NotNull(message = "Status is required")
+    
     private MaintenanceStatus status;
 }
