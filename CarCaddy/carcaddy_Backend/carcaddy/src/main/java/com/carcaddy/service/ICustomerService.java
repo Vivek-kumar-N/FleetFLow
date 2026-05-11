@@ -22,4 +22,6 @@ public interface ICustomerService {
     Customer blacklistCustomer(String customerId);
 
     Integer getLoyaltyPoints(String customerId);
+
+    
 }
