@@ -23,9 +23,9 @@ public class CustomerServiceImpl implements ICustomerService {
 
     // ---------------- DTO <-> Entity Mapping Methods----------------
 
-    /**
-     * Converts CustomerDTO to Customer entity (does not set system-controlled fields like customerId).
-     */
+    
+     //Converts CustomerDTO to Customer entity (does not set system-controlled fields like customerId).
+    
     private Customer dtoToEntity(CustomerDTO dto) {
         Customer customer = new Customer();
         customer.setCustomerName(dto.getCustomerName());
@@ -37,9 +37,9 @@ public class CustomerServiceImpl implements ICustomerService {
         return customer;
     }
 
-    /**
-     * Converts Customer entity to CustomerDTO.
-     */
+    
+    // Converts Customer entity to CustomerDTO.
+     
     private CustomerDTO entityToDto(Customer customer) {
         CustomerDTO dto = new CustomerDTO();
         dto.setCustomerName(customer.getCustomerName());
@@ -51,10 +51,10 @@ public class CustomerServiceImpl implements ICustomerService {
         return dto;
     }
 
-    /**
-     * Applies incoming DTO fields onto an existing Customer entity.
-     * (Useful for update operations to keep the entity ID intact.)
-     */
+    
+     // Applies incoming DTO fields onto an existing Customer entity.
+     // (Useful for update operations to keep the entity ID intact.)
+     
     private void applyDtoToExistingEntity(Customer existing, CustomerDTO dto) {
         existing.setCustomerName(dto.getCustomerName());
         existing.setContactNumber(dto.getContactNumber());
@@ -78,8 +78,10 @@ public class CustomerServiceImpl implements ICustomerService {
         });
 
         repository.findByDrivingLicense(dto.getDrivingLicense()).ifPresent(c -> {
-            log.warn("Add customer blocked: driving license already exists | drivingLicense={}", dto.getDrivingLicense());
-            throw new InvalidEntityException("Customer with driving license " + dto.getDrivingLicense() + " already exists");
+            log.warn("Add customer blocked: driving license already exists | drivingLicense={}",
+                    dto.getDrivingLicense());
+            throw new InvalidEntityException(
+                    "Customer with driving license " + dto.getDrivingLicense() + " already exists");
         });
 
         // Generate sequential customerId in format CUST-001
@@ -97,7 +99,8 @@ public class CustomerServiceImpl implements ICustomerService {
         Customer saved = repository.save(customer);
         log.info("Customer created successfully | customerId={}", saved.getCustomerId());
 
-        // entityToDto() implemented; can be used later for DTO-based responses if needed
+        // entityToDto() implemented; can be used later for DTO-based responses if
+        // needed
         return saved;
     }
 
@@ -112,7 +115,8 @@ public class CustomerServiceImpl implements ICustomerService {
                 });
 
         // Keep ID, update other fields (use helper)
-        // If you don't want driving license/contact updates here, you can remove those lines from applyDtoToExistingEntity.
+        // If you don't want driving license/contact updates here, you can remove those
+        // lines from applyDtoToExistingEntity.
         applyDtoToExistingEntity(customer, dto);
 
         Customer updated = repository.save(customer);
@@ -191,4 +195,19 @@ public class CustomerServiceImpl implements ICustomerService {
         log.info("Loyalty points fetched | customerId={}, points={}", customerId, points);
         return points;
     }
+
+    @Override
+    public void deleteCustomer(String customerId) {
+        log.info("CustomerServiceImpl.deleteCustomer() called | customerId={}", customerId);
+
+        Customer customer = repository.findById(customerId)
+                .orElseThrow(() -> {
+                    log.warn("Delete customer failed: customer not found | customerId={}", customerId);
+                    return new InvalidEntityException("Customer ID " + customerId + " not found");
+                });
+
+        repository.delete(customer);
+        log.info("Customer deleted successfully | customerId={}", customerId);
+    }
+
 }
