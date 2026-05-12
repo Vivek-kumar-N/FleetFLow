@@ -100,7 +100,7 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
 
         Car car = getCarOrThrow(dto.getRegistrationNumber());
 
-        // NEW CHECK ADDED
+        
         validateMaintenanceExists(dto.getRegistrationNumber());
 
         Maintenance m = convertToEntity(dto, car);
@@ -131,20 +131,24 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
             usageDue = car.getRentalCount() >= 20;
         }
     
+        
         if (!(mileageDue || timeDue || usageDue)) {
-            throw new InvalidEntityException(
-                    "Car does not meet criteria for routine maintenance scheduling");
+            log.info("No conditions met, but scheduling routine maintenance anyway");
         }
     
         dto.setMaintenanceType(MaintenanceType.ROUTINE);
         dto.setStatus(MaintenanceStatus.SCHEDULED);
     
-        
+        //  update car status
         car.setStatus(CarStatus.MAINTENANCE);
         carRepository.save(car);
     
-        return addMaintenance(dto);
+        
+        Maintenance m = convertToEntity(dto, car);
+    
+        return convertToDTO(repo.save(m));
     }
+    
 
     @Override
     public MaintenanceDto addEmergencyMaintenance(MaintenanceDto dto) {
@@ -168,19 +172,20 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
     
         m.setStatus(status);
     
-        // FIX: When completed
         if (status == MaintenanceStatus.COMPLETED) {
     
             log.info("Maintenance completed, updating completedDate and car status");
     
             m.setCompletedDate(LocalDate.now());
     
-            // Update car status
-            Car car = m.getCar();
-            if (car != null) {
-                car.setStatus(CarStatus.AVAILABLE);
-                carRepository.save(car);
-            }
+            //  fetch explicitly
+            String reg = m.getCar().getRegistrationNumber();
+            Car car = carRepository.findById(reg)
+                    .orElseThrow(() ->
+                            new InvalidEntityException("Car with Registration Number " + reg + " not found"));
+    
+            car.setStatus(CarStatus.AVAILABLE);
+            carRepository.save(car);
         }
     
         return convertToDTO(repo.save(m));
