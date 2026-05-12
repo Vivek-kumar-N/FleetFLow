@@ -23,5 +23,6 @@ public interface ICustomerService {
 
     Integer getLoyaltyPoints(String customerId);
 
+    void deleteCustomer(String customerId);
     
 }

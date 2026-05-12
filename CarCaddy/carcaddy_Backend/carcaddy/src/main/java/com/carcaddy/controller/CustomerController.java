@@ -28,7 +28,8 @@ public class CustomerController {
     // Add new customer
     @PostMapping
     public ResponseEntity<Customer> addCustomer(@Valid @RequestBody CustomerDTO dto) {
-        log.info("POST /api/customers called | emailId={}, drivingLicense={}", dto.getEmailId(), dto.getDrivingLicense());
+        log.info("POST /api/customers called | emailId={}, drivingLicense={}", dto.getEmailId(),
+                dto.getDrivingLicense());
         Customer created = service.addCustomer(dto);
         log.info("Customer created | customerId={}", created.getCustomerId());
         return new ResponseEntity<>(created, HttpStatus.CREATED);
@@ -93,5 +94,14 @@ public class CustomerController {
         Integer points = service.getLoyaltyPoints(id);
         log.info("Loyalty points returned | customerId={}, points={}", id, points);
         return points;
+    }
+
+    // Delete customer
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCustomer(@PathVariable String id) {
+        log.info("DELETE /api/customers/{} called", id);
+        service.deleteCustomer(id);
+        log.info("Customer deleted | customerId={}", id);
+        return ResponseEntity.noContent().build();
     }
 }
