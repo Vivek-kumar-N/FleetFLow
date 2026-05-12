@@ -110,12 +110,39 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
 
     @Override
     public MaintenanceDto scheduleRoutineMaintenance(MaintenanceDto dto) {
-
+    
         log.info("Scheduling routine maintenance for car: {}", dto.getRegistrationNumber());
-
+    
+        Car car = getCarOrThrow(dto.getRegistrationNumber());
+    
+        boolean mileageDue = false;
+        boolean timeDue = false;
+        boolean usageDue = false;
+    
+        if (car.getMileage() != null && car.getLastServiceMileage() != null) {
+            mileageDue = (car.getMileage() - car.getLastServiceMileage()) >= 5000;
+        }
+    
+        if (car.getLastServiceDate() != null) {
+            timeDue = car.getLastServiceDate().plusDays(90).isBefore(LocalDate.now());
+        }
+    
+        if (car.getRentalCount() != null) {
+            usageDue = car.getRentalCount() >= 20;
+        }
+    
+        if (!(mileageDue || timeDue || usageDue)) {
+            throw new InvalidEntityException(
+                    "Car does not meet criteria for routine maintenance scheduling");
+        }
+    
         dto.setMaintenanceType(MaintenanceType.ROUTINE);
         dto.setStatus(MaintenanceStatus.SCHEDULED);
-
+    
+        
+        car.setStatus(CarStatus.MAINTENANCE);
+        carRepository.save(car);
+    
         return addMaintenance(dto);
     }
 
@@ -132,15 +159,30 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
 
     @Override
     public MaintenanceDto updateStatus(Long id, MaintenanceStatus status) {
-
+    
         log.info("Updating maintenance ID {} to status {}", id, status);
-
+    
         Maintenance m = repo.findById(id)
                 .orElseThrow(() ->
                         new InvalidEntityException("Maintenance ID " + id + " not found"));
-
+    
         m.setStatus(status);
-
+    
+        // FIX: When completed
+        if (status == MaintenanceStatus.COMPLETED) {
+    
+            log.info("Maintenance completed, updating completedDate and car status");
+    
+            m.setCompletedDate(LocalDate.now());
+    
+            // Update car status
+            Car car = m.getCar();
+            if (car != null) {
+                car.setStatus(CarStatus.AVAILABLE);
+                carRepository.save(car);
+            }
+        }
+    
         return convertToDTO(repo.save(m));
     }
 
