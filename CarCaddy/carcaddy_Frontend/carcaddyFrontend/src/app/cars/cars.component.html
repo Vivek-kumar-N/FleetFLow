@@ -1,1 +1,3 @@
-<p>cars works!</p>
+<app-admin-cars     *ngIf="authService.isAdmin()"></app-admin-cars>
+<app-employee-cars  *ngIf="authService.isEmployee()"></app-employee-cars>
+<app-customer-cars  *ngIf="authService.isCustomer()"></app-customer-cars>

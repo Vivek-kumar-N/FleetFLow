@@ -1,0 +1,56 @@
+.btn-sm-action {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-sm-action:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+
+.btn-sm-return {
+  border-color: rgba(0, 230, 118, 0.3);
+  color: var(--success);
+}
+
+.btn-sm-return:hover { background: rgba(0, 230, 118, 0.1); }
+
+.btn-sm-cancel {
+  border-color: rgba(255, 82, 82, 0.3);
+  color: var(--danger);
+}
+
+.btn-sm-cancel:hover { background: rgba(255, 82, 82, 0.1); }
+
+.fare-display {
+  background: rgba(108, 99, 255, 0.08);
+  border: 1px solid rgba(108, 99, 255, 0.2);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.fare-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fare-amount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  line-height: 1.2;
+}
+
+.fare-note {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.col-span-2 { grid-column: span 2; }

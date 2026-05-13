@@ -1,0 +1,109 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-person-badge text-success me-2"></i>Customer Management</h5>
+    <button class="btn btn-success btn-sm" (click)="openRegisterModal()"><i class="bi bi-person-plus me-1"></i>Register Customer</button>
+  </div>
+
+  <div *ngIf="success" class="alert alert-success alert-dismissible"><button type="button" class="btn-close" (click)="success=''"></button>{{success}}</div>
+  <div *ngIf="error" class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" (click)="error=''"></button>{{error}}</div>
+
+  <div class="card mb-3">
+    <div class="card-body py-2">
+      <input type="text" class="form-control form-control-sm" placeholder="Search by name or customer ID..." [(ngModel)]="searchTerm" (input)="applyFilters()" style="max-width:400px">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <div *ngIf="loading" class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+      <table *ngIf="!loading" class="table table-hover mb-0">
+        <thead class="table-dark"><tr><th>Customer ID</th><th>Name</th><th>Email</th><th>Contact</th><th>Loyalty Pts</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let c of filteredCustomers">
+            <td class="fw-semibold">{{c.customerId}}</td>
+            <td>{{c.customerName}}</td>
+            <td>{{c.emailId}}</td>
+            <td>{{c.contactNumber}}</td>
+            <td><span class="badge bg-warning text-dark">{{c.loyaltyPoints || 0}} pts</span></td>
+            <td><span class="badge" [ngClass]="c.blacklisted ? 'bg-danger' : 'bg-success'">{{c.blacklisted ? 'Blacklisted' : 'Active'}}</span></td>
+            <td>
+              <button class="btn btn-xs btn-outline-primary me-1" title="Update Contact" (click)="openContactModal(c)"><i class="bi bi-telephone"></i></button>
+              <button class="btn btn-xs btn-outline-info" title="Booking History" (click)="openHistoryModal(c)"><i class="bi bi-clock-history"></i></button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredCustomers.length === 0"><td colspan="7" class="text-center text-muted py-4">No customers found</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Register Modal -->
+<div class="modal fade show d-block" *ngIf="showRegisterModal" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Register New Customer</h5><button class="btn-close" (click)="closeModals()"></button></div>
+      <div class="modal-body">
+        <form [formGroup]="registerForm">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Full Name *</label><input class="form-control" formControlName="customerName"></div>
+            <div class="col-md-6"><label class="form-label">Email *</label><input type="email" class="form-control" formControlName="emailId"></div>
+            <div class="col-md-6"><label class="form-label">Contact Number *</label><input class="form-control" formControlName="contactNumber" placeholder="10-digit number"></div>
+            <div class="col-md-6"><label class="form-label">Driving License *</label><input class="form-control" formControlName="drivingLicense"></div>
+            <div class="col-md-6"><label class="form-label">Occupation</label><input class="form-control" formControlName="occupation"></div>
+            <div class="col-md-6"><label class="form-label">Address *</label><input class="form-control" formControlName="address"></div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn btn-success" (click)="registerCustomer()" [disabled]="submitting"><span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>Register</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Update Contact Modal -->
+<div class="modal fade show d-block" *ngIf="showContactModal" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Update Contact — {{selectedCustomer?.customerName}}</h5><button class="btn-close" (click)="closeModals()"></button></div>
+      <div class="modal-body">
+        <form [formGroup]="contactForm">
+          <label class="form-label">New Contact Number *</label>
+          <input class="form-control" formControlName="contactNumber" placeholder="10-digit number">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn btn-primary" (click)="updateContact()" [disabled]="submitting">Update</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal fade show d-block" *ngIf="showHistoryModal" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Booking History — {{selectedCustomer?.customerName}}</h5><button class="btn-close" (click)="closeModals()"></button></div>
+      <div class="modal-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-light"><tr><th>ID</th><th>Car</th><th>Start</th><th>End</th><th>Fare</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let b of selectedCustomerBookings">
+              <td>#{{b.bookingId}}</td>
+              <td>{{b.car?.model}} ({{b.car?.registrationNumber}})</td>
+              <td>{{b.startDate | date:'dd MMM yyyy'}}</td>
+              <td>{{b.endDate | date:'dd MMM yyyy'}}</td>
+              <td>₹{{b.totalFare | number:'1.0-0'}}</td>
+              <td><span class="badge" [ngClass]="{'bg-success':b.bookingStatus==='COMPLETED','bg-warning text-dark':b.bookingStatus==='ACTIVE','bg-danger':b.bookingStatus==='CANCELLED','bg-primary':b.bookingStatus==='CONFIRMED'}">{{b.bookingStatus}}</span></td>
+            </tr>
+            <tr *ngIf="selectedCustomerBookings.length === 0"><td colspan="6" class="text-center text-muted py-3">No bookings</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" (click)="closeModals()">Close</button></div>
+    </div>
+  </div>
+</div>

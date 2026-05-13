@@ -1,0 +1,137 @@
+<div class="container-fluid py-3">
+  <h5 class="fw-bold mb-4"><i class="bi bi-person-circle text-primary me-2"></i>My Account</h5>
+
+  <div *ngIf="success" class="alert alert-success alert-dismissible"><button type="button" class="btn-close" (click)="success=''"></button>{{success}}</div>
+  <div *ngIf="error" class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" (click)="error=''"></button>{{error}}</div>
+  <div *ngIf="loading" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+
+  <div *ngIf="!loading">
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4">
+      <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='profile'}" (click)="activeTab='profile'" href="javascript:void(0)"><i class="bi bi-person me-1"></i>Profile</a></li>
+      <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='loyalty'}" (click)="activeTab='loyalty'" href="javascript:void(0)"><i class="bi bi-star me-1"></i>Loyalty & Rewards</a></li>
+      <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='bookings'}" (click)="activeTab='bookings'" href="javascript:void(0)"><i class="bi bi-calendar-check me-1"></i>Booking History</a></li>
+    </ul>
+
+    <!-- Profile Tab -->
+    <div *ngIf="activeTab === 'profile'">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="card text-center p-4">
+            <div class="avatar-circle mx-auto mb-3"><i class="bi bi-person-fill"></i></div>
+            <h5 class="fw-bold">{{customer?.customerName}}</h5>
+            <div class="text-muted small">{{customer?.customerId}}</div>
+            <span class="badge bg-success mt-2">Active Customer</span>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-header fw-bold">Update Personal Details</div>
+            <div class="card-body">
+              <form [formGroup]="profileForm">
+                <div class="row g-3">
+                  <div class="col-md-6"><label class="form-label">Full Name *</label><input class="form-control" formControlName="customerName"></div>
+                  <div class="col-md-6"><label class="form-label">Email *</label><input type="email" class="form-control" formControlName="emailId"></div>
+                  <div class="col-md-6"><label class="form-label">Contact Number *</label><input class="form-control" formControlName="contactNumber"></div>
+                  <div class="col-md-6"><label class="form-label">Driving License *</label><input class="form-control" formControlName="drivingLicense"></div>
+                  <div class="col-md-6"><label class="form-label">Occupation</label><input class="form-control" formControlName="occupation"></div>
+                  <div class="col-md-6"><label class="form-label">Address *</label><input class="form-control" formControlName="address"></div>
+                </div>
+                <button class="btn btn-primary mt-3" (click)="updateProfile()" [disabled]="submitting">
+                  <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>Save Changes
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loyalty Tab -->
+    <div *ngIf="activeTab === 'loyalty'">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="card text-center p-4">
+            <div class="loyalty-points">{{customer?.loyaltyPoints || 0}}</div>
+            <div class="text-muted mb-2">Total Points</div>
+            <span class="badge fs-6 mb-3" [ngClass]="{'bg-dark':loyaltyTier==='Platinum','bg-warning text-dark':loyaltyTier==='Gold','bg-secondary':loyaltyTier==='Silver','bg-danger':loyaltyTier==='Bronze'}">{{loyaltyTier}} Member</span>
+            <div class="progress mb-2" style="height:12px">
+              <div class="progress-bar bg-warning" [style.width.%]="Math.min(100, ((customer?.loyaltyPoints || 0) / 500) * 100)"></div>
+            </div>
+            <small class="text-muted">{{Math.max(0, 500 - (customer?.loyaltyPoints || 0))}} pts to Platinum</small>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="card mb-3">
+            <div class="card-header fw-bold">Your Benefits</div>
+            <div class="card-body">
+              <div class="benefit-item" [ngClass]="loyaltyDiscount > 0 ? 'active' : 'inactive'">
+                <i class="bi bi-tag-fill me-2"></i>
+                <span *ngIf="loyaltyDiscount > 0">You have a <strong>{{loyaltyDiscount}}% discount</strong> on your next booking!</span>
+                <span *ngIf="loyaltyDiscount === 0">Earn more points to unlock discounts</span>
+              </div>
+              <div class="benefit-item mt-2" [ngClass]="freeRentalEligible ? 'active' : 'inactive'">
+                <i class="bi bi-gift-fill me-2"></i>
+                <span *ngIf="freeRentalEligible">You're eligible for a <strong>FREE rental!</strong></span>
+                <span *ngIf="!freeRentalEligible">Reach 500 points for a free rental</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header fw-bold">How to Earn Points</div>
+            <div class="card-body">
+              <ul class="list-unstyled mb-0">
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>10 points per completed rental</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>50 points for 5+ rentals milestone</li>
+                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>500 points = 1 free rental day</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking History Tab -->
+    <div *ngIf="activeTab === 'bookings'">
+      <div class="card mb-3">
+        <div class="card-header fw-bold"><i class="bi bi-calendar-check text-warning me-2"></i>Active Bookings ({{activeBookings.length}})</div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>ID</th><th>Car</th><th>Start</th><th>End</th><th>Fare</th><th>Discount</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let b of activeBookings">
+                <td>#{{b.bookingId}}</td>
+                <td>{{b.car?.model}} <small class="text-muted">({{b.car?.registrationNumber}})</small></td>
+                <td>{{b.startDate | date:'dd MMM yyyy'}}</td>
+                <td>{{b.endDate | date:'dd MMM yyyy'}}</td>
+                <td>₹{{b.totalFare | number:'1.0-0'}}</td>
+                <td>{{b.discount || 0}}%</td>
+                <td><span class="badge bg-success">{{b.bookingStatus}}</span></td>
+              </tr>
+              <tr *ngIf="activeBookings.length === 0"><td colspan="7" class="text-center text-muted py-3">No active bookings</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header fw-bold"><i class="bi bi-clock-history text-secondary me-2"></i>Booking History ({{completedBookings.length}})</div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>ID</th><th>Car</th><th>Start</th><th>End</th><th>Fare</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let b of completedBookings">
+                <td>#{{b.bookingId}}</td>
+                <td>{{b.car?.model}} <small class="text-muted">({{b.car?.registrationNumber}})</small></td>
+                <td>{{b.startDate | date:'dd MMM yyyy'}}</td>
+                <td>{{b.endDate | date:'dd MMM yyyy'}}</td>
+                <td>₹{{b.totalFare | number:'1.0-0'}}</td>
+                <td><span class="badge" [ngClass]="{'bg-success':b.bookingStatus==='COMPLETED','bg-danger':b.bookingStatus==='CANCELLED','bg-secondary':b.bookingStatus==='MODIFIED'}">{{b.bookingStatus}}</span></td>
+              </tr>
+              <tr *ngIf="completedBookings.length === 0"><td colspan="6" class="text-center text-muted py-3">No completed bookings</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

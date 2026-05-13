@@ -1,0 +1,67 @@
+<nav class="sidebar">
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <div class="logo-icon">CC</div>
+    <div>
+      <div class="logo-text">CarCaddy</div>
+      <div class="logo-sub">Fleet Management</div>
+    </div>
+  </div>
+
+  <!-- User Info -->
+  <div class="sidebar-user">
+    <div class="user-avatar">{{ userInitial }}</div>
+    <div>
+      <div class="user-name">{{ authService.getUsername() }}</div>
+      <div class="user-role">{{ roleLabel }}</div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Navigation</div>
+
+    <a class="nav-item" [class.active]="isActive('/dashboard')" routerLink="/dashboard">
+      <i class="bi bi-grid-1x2-fill"></i> Dashboard
+    </a>
+
+    <a class="nav-item" [class.active]="isActive('/cars')" routerLink="/cars"
+       *ngIf="authService.isAdmin() || authService.isEmployee() || authService.isCustomer()">
+      <i class="bi bi-car-front-fill"></i> Fleet
+    </a>
+
+    <a class="nav-item" [class.active]="isActive('/customers')" routerLink="/customers"
+       *ngIf="authService.isAdmin() || authService.isEmployee()">
+      <i class="bi bi-people-fill"></i> Customers
+    </a>
+
+    <a class="nav-item" [class.active]="isActive('/rentals')" routerLink="/rentals">
+      <i class="bi bi-calendar-check-fill"></i> Rentals
+    </a>
+
+    <a class="nav-item" [class.active]="isActive('/maintenance')" routerLink="/maintenance"
+       *ngIf="authService.isAdmin() || authService.isEmployee()">
+      <i class="bi bi-tools"></i> Maintenance
+    </a>
+
+    <a class="nav-item" [class.active]="isActive('/employees')" routerLink="/employees"
+       *ngIf="authService.isAdmin()">
+      <i class="bi bi-person-badge-fill"></i> Employees
+    </a>
+
+    <a class="nav-item" [class.active]="isActive('/reports')" routerLink="/reports"
+       *ngIf="authService.isAdmin() || authService.isEmployee()">
+      <i class="bi bi-bar-chart-fill"></i> Reports
+    </a>
+  </div>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+    <a class="nav-item" routerLink="/profile">
+      <i class="bi bi-person-circle"></i> Profile
+    </a>
+    <div class="nav-item" (click)="logout()" style="cursor:pointer;">
+      <i class="bi bi-box-arrow-left"></i> Logout
+    </div>
+  </div>
+</nav>

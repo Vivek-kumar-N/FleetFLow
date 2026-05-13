@@ -13,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/employees")
+@CrossOrigin(origins = "*")
 public class EmployeeController {
 
     private static final Logger logger =
@@ -26,7 +27,7 @@ public class EmployeeController {
 
     @PostMapping
     public ResponseEntity<Employee> addEmployee(
-            @Valid @RequestBody Employee employee) {
+            @RequestBody Employee employee) {
 
         logger.info("Add employee request received");
         Employee savedEmployee = employeeService.addEmployee(employee);
@@ -38,6 +39,17 @@ public class EmployeeController {
             @PathVariable Long id,
             @RequestParam String contactNumber) {
 
+        return ResponseEntity.ok(
+                employeeService.updateContactNumber(id, contactNumber)
+        );
+    }
+
+    @PatchMapping("/{id}/contact")
+    public ResponseEntity<Employee> updateContactNumberPatch(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body) {
+
+        String contactNumber = body.get("contactNumber");
         return ResponseEntity.ok(
                 employeeService.updateContactNumber(id, contactNumber)
         );

@@ -1,1 +1,3 @@
-<p>customers works!</p>
+<app-admin-customers       *ngIf="authService.isAdmin()"></app-admin-customers>
+<app-employee-customers    *ngIf="authService.isEmployee()"></app-employee-customers>
+<app-customer-self-profile *ngIf="authService.isCustomer()"></app-customer-self-profile>

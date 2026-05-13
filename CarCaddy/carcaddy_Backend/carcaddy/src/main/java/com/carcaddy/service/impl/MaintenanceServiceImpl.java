@@ -100,9 +100,6 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
 
         Car car = getCarOrThrow(dto.getRegistrationNumber());
 
-        
-        validateMaintenanceExists(dto.getRegistrationNumber());
-
         Maintenance m = convertToEntity(dto, car);
 
         return convertToDTO(repo.save(m));

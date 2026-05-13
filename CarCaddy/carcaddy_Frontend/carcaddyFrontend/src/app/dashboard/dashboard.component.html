@@ -1,1 +1,11 @@
-<p>dashboard works!</p>
+<div class="container-fluid py-3">
+  <h4 class="mb-4 fw-bold">
+    <i class="bi bi-speedometer2 me-2 text-primary"></i>
+    Dashboard
+    <small class="text-muted fs-6 ms-2">Welcome, {{authService.getUsername()}}</small>
+  </h4>
+
+  <app-admin-dashboard    *ngIf="authService.isAdmin()"></app-admin-dashboard>
+  <app-employee-dashboard *ngIf="authService.isEmployee()"></app-employee-dashboard>
+  <app-customer-dashboard *ngIf="authService.isCustomer()"></app-customer-dashboard>
+</div>

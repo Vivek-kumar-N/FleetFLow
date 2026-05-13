@@ -1,0 +1,187 @@
+<div class="admin-dashboard">
+  <div *ngIf="loading" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+  <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+
+  <div *ngIf="!loading">
+    <!-- Platform-wide Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-2 col-sm-4 col-6">
+        <div class="stat-card bg-primary text-white">
+          <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+          <div class="stat-value">{{stats.totalEmployees}}</div>
+          <div class="stat-label">Employees</div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-4 col-6">
+        <div class="stat-card bg-success text-white">
+          <div class="stat-icon"><i class="bi bi-car-front-fill"></i></div>
+          <div class="stat-value">{{stats.totalCars}}</div>
+          <div class="stat-label">Cars in Fleet</div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-4 col-6">
+        <div class="stat-card bg-info text-white">
+          <div class="stat-icon"><i class="bi bi-person-badge-fill"></i></div>
+          <div class="stat-value">{{stats.totalCustomers}}</div>
+          <div class="stat-label">Customers</div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-4 col-6">
+        <div class="stat-card bg-warning text-white">
+          <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
+          <div class="stat-value">{{stats.totalRentals}}</div>
+          <div class="stat-label">Total Rentals</div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-4 col-6">
+        <div class="stat-card bg-danger text-white">
+          <div class="stat-icon"><i class="bi bi-tools"></i></div>
+          <div class="stat-value">{{stats.totalMaintenanceRecords}}</div>
+          <div class="stat-label">Maintenance</div>
+        </div>
+      </div>
+      <div class="col-md-2 col-sm-4 col-6">
+        <div class="stat-card bg-secondary text-white">
+          <div class="stat-icon"><i class="bi bi-speedometer2"></i></div>
+          <div class="stat-value">{{fleetHealth?.fleetUtilization || 0 | number:'1.0-0'}}%</div>
+          <div class="stat-label">Fleet Utilization</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <!-- Fleet Health -->
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-header fw-bold"><i class="bi bi-heart-pulse-fill text-danger me-2"></i>Fleet Health</div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Available</span><span class="badge bg-success">{{fleetHealth?.availableCars || 0}}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Rented</span><span class="badge bg-warning text-dark">{{fleetHealth?.rentedCars || 0}}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>In Maintenance</span><span class="badge bg-danger">{{fleetHealth?.maintenanceCars || 0}}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Due for Service</span><span class="badge bg-secondary">{{fleetHealth?.carsDueForService || 0}}</span>
+            </div>
+            <div class="progress mt-3" style="height:10px">
+              <div class="progress-bar bg-success" [style.width.%]="fleetHealth?.fleetUtilization || 0"></div>
+            </div>
+            <small class="text-muted">{{fleetHealth?.fleetUtilization || 0 | number:'1.0-1'}}% utilization</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Customers -->
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-header fw-bold"><i class="bi bi-trophy-fill text-warning me-2"></i>Top Customers</div>
+          <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+              <li *ngFor="let c of topCustomers; let i = index" class="list-group-item d-flex justify-content-between align-items-center">
+                <span><span class="badge bg-primary me-2">#{{i+1}}</span>{{c.customerName || c[0]}}</span>
+                <span class="badge bg-success rounded-pill">{{c.bookingCount || c[1]}} bookings</span>
+              </li>
+              <li *ngIf="topCustomers.length === 0" class="list-group-item text-muted text-center">No data yet</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loyalty Analytics -->
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-header fw-bold"><i class="bi bi-star-fill text-warning me-2"></i>Loyalty Program</div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Total Points Issued</span><span class="fw-bold text-primary">{{loyaltyAnalytics?.totalPointsIssued || 0}}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Eligible for Free Rental</span><span class="fw-bold text-success">{{loyaltyAnalytics?.customersEligibleForFreeRental || 0}}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Avg Points/Customer</span><span class="fw-bold">{{loyaltyAnalytics?.averageLoyaltyPoints || 0 | number:'1.0-1'}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Row -->
+    <div class="row g-3">
+      <!-- Revenue by Model -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header fw-bold"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Revenue by Car Model</div>
+          <div class="card-body">
+            <div *ngFor="let entry of incomeEntries" class="mb-2">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="small">{{entry[0]}}</span>
+                <span class="small fw-bold">₹{{entry[1] | number:'1.0-0'}}</span>
+              </div>
+              <div class="progress" style="height:8px">
+                <div class="progress-bar bg-primary" [style.width.%]="getPercent(entry[1], incomeEntries)"></div>
+              </div>
+            </div>
+            <p *ngIf="incomeEntries.length === 0" class="text-muted text-center">No revenue data</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Maintenance Cost by Model -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header fw-bold"><i class="bi bi-wrench-adjustable text-danger me-2"></i>Maintenance Cost by Model</div>
+          <div class="card-body">
+            <div *ngFor="let entry of maintenanceEntries" class="mb-2">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="small">{{entry[0]}}</span>
+                <span class="small fw-bold text-danger">₹{{entry[1] | number:'1.0-0'}}</span>
+              </div>
+              <div class="progress" style="height:8px">
+                <div class="progress-bar bg-danger" [style.width.%]="getPercent(entry[1], maintenanceEntries)"></div>
+              </div>
+            </div>
+            <p *ngIf="maintenanceEntries.length === 0" class="text-muted text-center">No maintenance data</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Car Utilization -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header fw-bold"><i class="bi bi-pie-chart-fill text-info me-2"></i>Car Utilization</div>
+          <div class="card-body">
+            <div *ngFor="let entry of utilizationEntries" class="mb-2">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="small">{{entry[0]}}</span>
+                <span class="small fw-bold">{{entry[1]}} rentals</span>
+              </div>
+              <div class="progress" style="height:8px">
+                <div class="progress-bar bg-info" [style.width.%]="getPercent(entry[1], utilizationEntries)"></div>
+              </div>
+            </div>
+            <p *ngIf="utilizationEntries.length === 0" class="text-muted text-center">No utilization data</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cars with Minimal Bookings -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header fw-bold"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Cars with Minimal Bookings</div>
+          <div class="card-body">
+            <div *ngFor="let entry of minimalEntries" class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+              <span class="small fw-bold">{{entry[0]}}</span>
+              <span class="badge bg-warning text-dark">{{entry[1]}} bookings</span>
+            </div>
+            <p *ngIf="minimalEntries.length === 0" class="text-muted text-center">No data</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

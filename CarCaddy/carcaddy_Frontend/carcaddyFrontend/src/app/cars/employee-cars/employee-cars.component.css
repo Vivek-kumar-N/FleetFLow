@@ -1,0 +1,3 @@
+.car-card { border: 1px solid #e9ecef; border-radius: 10px; padding: 16px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: box-shadow 0.2s; }
+.car-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 10px; }

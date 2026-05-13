@@ -1,0 +1,31 @@
+.btn-sm-action {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-sm-action:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+
+.btn-sm-danger {
+  border-color: rgba(255, 82, 82, 0.3);
+  color: var(--danger);
+}
+
+.btn-sm-danger:hover { background: rgba(255, 82, 82, 0.1); border-color: var(--danger); }
+
+.btn-danger-solid {
+  background: var(--danger);
+  border: none;
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-danger-solid:hover { opacity: 0.9; }
