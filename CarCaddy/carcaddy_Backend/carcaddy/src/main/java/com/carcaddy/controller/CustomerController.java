@@ -25,83 +25,134 @@ public class CustomerController {
     private final ICustomerService service;
     private static final Logger log = LoggerFactory.getLogger(CustomerController.class);
 
-    // Add new customer
+    // ---------------- ADD CUSTOMER ----------------
     @PostMapping
     public ResponseEntity<Customer> addCustomer(@Valid @RequestBody CustomerDTO dto) {
-        log.info("POST /api/customers called | emailId={}, drivingLicense={}", dto.getEmailId(),
-                dto.getDrivingLicense());
-        Customer created = service.addCustomer(dto);
-        log.info("Customer created | customerId={}", created.getCustomerId());
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
+        log.info("POST /api/customers | Creating customer | emailId={}, drivingLicense={}",
+                dto.getEmailId(), dto.getDrivingLicense());
+
+        Customer customer = service.addCustomer(dto);
+
+        log.info("Customer created successfully | customerId={}", customer.getCustomerId());
+        return new ResponseEntity<>(customer, HttpStatus.CREATED);
     }
 
-    // Update customer details
+    // ---------------- UPDATE CUSTOMER ----------------
     @PutMapping("/{id}")
-    public Customer updateCustomer(@PathVariable String id, @Valid @RequestBody CustomerDTO dto) {
-        log.info("PUT /api/customers/{} called", id);
+    public Customer updateCustomer(@PathVariable String id,
+                                   @Valid @RequestBody CustomerDTO dto) {
+
+        log.info("PUT /api/customers/{} | Updating customer details", id);
         Customer updated = service.updateCustomer(id, dto);
-        log.info("Customer updated | customerId={}", updated.getCustomerId());
+        log.info("Customer updated successfully | customerId={}", updated.getCustomerId());
+
         return updated;
     }
 
-    // Update contact number
+    // ---------------- UPDATE CONTACT NUMBER ----------------
     @PatchMapping("/{id}/contact/{contact}")
-    public Customer updateContact(@PathVariable String id, @PathVariable String contact) {
-        log.info("PATCH /api/customers/{}/contact/{} called", id, contact);
+    public Customer updateContact(@PathVariable String id,
+                                  @PathVariable String contact) {
+
+        log.info("PATCH /api/customers/{}/contact/{} | Updating contact number", id, contact);
         Customer updated = service.updateContact(id, contact);
         log.info("Customer contact updated | customerId={}", updated.getCustomerId());
+
         return updated;
     }
 
-    // Get all customers
+    // ---------------- GET ALL CUSTOMERS ----------------
     @GetMapping
-    public List<Customer> getAll() {
-        log.info("GET /api/customers called");
+    public List<Customer> getAllCustomers() {
+        log.info("GET /api/customers | Fetching all customers");
+
         List<Customer> customers = service.getAllCustomers();
-        log.info("Customers returned count={}", customers.size());
+        log.info("Total customers fetched={}", customers.size());
+
         return customers;
     }
 
-    // Get customer by ID
+    // ---------------- GET CUSTOMER BY ID ----------------
     @GetMapping("/{id}")
-    public Customer getById(@PathVariable String id) {
-        log.info("GET /api/customers/{} called", id);
+    public Customer getCustomerById(@PathVariable String id) {
+        log.info("GET /api/customers/{} | Fetching customer by ID", id);
         return service.getCustomerById(id);
     }
 
-    // Search customers by name
+    // ---------------- SEARCH CUSTOMER BY NAME ----------------
     @GetMapping("/search/{name}")
-    public List<Customer> getByName(@PathVariable String name) {
-        log.info("GET /api/customers/search/{} called", name);
+    public List<Customer> getCustomersByName(@PathVariable String name) {
+        log.info("GET /api/customers/search/{} | Searching customers by name", name);
+
         List<Customer> customers = service.getCustomersByName(name);
-        log.info("Search result count={} for name={}", customers.size(), name);
+        log.info("Customers found with name='{}' | count={}", name, customers.size());
+
         return customers;
     }
 
-    // Blacklist customer
+    // ---------------- BLACKLIST CUSTOMER ----------------
     @PatchMapping("/{id}/blacklist")
-    public Customer blacklist(@PathVariable String id) {
-        log.info("PATCH /api/customers/{}/blacklist called", id);
-        Customer updated = service.blacklistCustomer(id);
-        log.info("Customer blacklisted | customerId={}", updated.getCustomerId());
-        return updated;
+    public Customer blacklistCustomer(@PathVariable String id) {
+        log.info("PATCH /api/customers/{}/blacklist | Blacklisting customer", id);
+
+        Customer customer = service.blacklistCustomer(id);
+        log.info("Customer blacklisted successfully | customerId={}", customer.getCustomerId());
+
+        return customer;
     }
 
-    // Get loyalty points
+    // ---------------- GET LOYALTY POINTS ----------------
     @GetMapping("/{id}/loyalty-points")
     public Integer getLoyaltyPoints(@PathVariable String id) {
-        log.info("GET /api/customers/{}/loyalty-points called", id);
+        log.info("GET /api/customers/{}/loyalty-points | Fetching loyalty points", id);
+
         Integer points = service.getLoyaltyPoints(id);
-        log.info("Loyalty points returned | customerId={}, points={}", id, points);
+        log.info("Loyalty points fetched | customerId={}, points={}", id, points);
+
         return points;
     }
 
-    // Delete customer
+    // ---------------- GET LOYALTY DISCOUNT ----------------
+    @GetMapping("/{id}/loyalty-discount")
+    public double getLoyaltyDiscount(@PathVariable String id) {
+        log.info("GET /api/customers/{}/loyalty-discount | Calculating loyalty discount", id);
+
+        double discount = service.calculateLoyaltyDiscount(id);
+        log.info("Loyalty discount calculated | customerId={}, discount={}", id, discount);
+
+        return discount;
+    }
+
+    // ---------------- FREE RENTAL ELIGIBILITY ----------------
+    @GetMapping("/{id}/free-rental-eligibility")
+    public boolean isEligibleForFreeRental(@PathVariable String id) {
+        log.info("GET /api/customers/{}/free-rental-eligibility | Checking eligibility", id);
+
+        boolean eligible = service.isEligibleForFreeRental(id);
+        log.info("Free rental eligibility | customerId={}, eligible={}", id, eligible);
+
+        return eligible;
+    }
+
+    // ---------------- CUSTOMERS WITH MAX BOOKINGS ----------------
+    @GetMapping("/max-bookings")
+    public List<Customer> getCustomersWithMaxBookings() {
+        log.info("GET /api/customers/max-bookings | Fetching customers with maximum bookings");
+
+        List<Customer> customers = service.getCustomersWithMaximumBookings();
+        log.info("Customers with maximum bookings fetched | count={}", customers.size());
+
+        return customers;
+    }
+
+    // ---------------- DELETE CUSTOMER ----------------
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable String id) {
-        log.info("DELETE /api/customers/{} called", id);
+        log.info("DELETE /api/customers/{} | Deleting customer", id);
+
         service.deleteCustomer(id);
-        log.info("Customer deleted | customerId={}", id);
+        log.info("Customer deleted successfully | customerId={}", id);
+
         return ResponseEntity.noContent().build();
     }
 }

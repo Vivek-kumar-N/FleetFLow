@@ -196,6 +196,58 @@ public class CustomerServiceImpl implements ICustomerService {
         return points;
     }
 
+
+    @Override
+public double calculateLoyaltyDiscount(String customerId) {
+    log.info("CustomerServiceImpl.calculateLoyaltyDiscount() called | customerId={}", customerId);
+
+    Customer customer = repository.findById(customerId)
+            .orElseThrow(() -> {
+                log.warn("Calculate discount failed: customer not found | customerId={}", customerId);
+                return new InvalidEntityException("Customer ID " + customerId + " not found");
+            });
+
+    int points = customer.getLoyaltyPoints();
+    double discount = points >= 100 ? 0.05 : 0.0;
+
+    log.info("Loyalty discount calculated | customerId={}, points={}, discount={}",
+            customerId, points, discount);
+
+    return discount;
+}
+
+
+@Override
+public boolean isEligibleForFreeRental(String customerId) {
+    log.info("CustomerServiceImpl.isEligibleForFreeRental() called | customerId={}", customerId);
+
+    Customer customer = repository.findById(customerId)
+            .orElseThrow(() -> {
+                log.warn("Free rental check failed: customer not found | customerId={}", customerId);
+                return new InvalidEntityException("Customer ID " + customerId + " not found");
+            });
+
+    boolean eligible = customer.getLoyaltyPoints() >= 500;
+
+    log.info("Free rental eligibility result | customerId={}, eligible={}",
+            customerId, eligible);
+
+    return eligible;
+}
+
+
+@Override
+public List<Customer> getCustomersWithMaximumBookings() {
+    log.info("CustomerServiceImpl.getCustomersWithMaximumBookings() called");
+
+    List<String> customerIds = repository.findCustomerIdsWithMaximumBookings();
+    List<Customer> customers = repository.findAllById(customerIds);
+
+    log.info("Customers with maximum bookings fetched | count={}", customers.size());
+
+    return customers;
+}
+
     @Override
     public void deleteCustomer(String customerId) {
         log.info("CustomerServiceImpl.deleteCustomer() called | customerId={}", customerId);
