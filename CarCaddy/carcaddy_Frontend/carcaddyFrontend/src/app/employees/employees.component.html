@@ -1,1 +1,5 @@
-<p>employees works!</p>
+<app-admin-employees    *ngIf="authService.isAdmin()"></app-admin-employees>
+<app-employee-profile  *ngIf="authService.isEmployee()"></app-employee-profile>
+<div *ngIf="authService.isCustomer()" class="container py-5 text-center text-muted">
+  <i class="bi bi-lock-fill fs-1 mb-3 d-block"></i>Access Denied — Customers cannot view employee data.
+</div>

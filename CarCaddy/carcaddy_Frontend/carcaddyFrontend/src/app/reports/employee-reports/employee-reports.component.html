@@ -1,0 +1,41 @@
+<div class="container-fluid py-3">
+  <h5 class="fw-bold mb-4"><i class="bi bi-bar-chart text-primary me-2"></i>Reports</h5>
+  <div *ngIf="loading" class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+
+  <div *ngIf="!loading">
+    <!-- Booking Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <div class="stat-card bg-warning text-white">
+          <div class="stat-icon"><i class="bi bi-play-circle-fill"></i></div>
+          <div class="stat-value">{{activeCount}}</div>
+          <div class="stat-label">Active Bookings</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="stat-card bg-success text-white">
+          <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+          <div class="stat-value">{{completedCount}}</div>
+          <div class="stat-label">Completed Bookings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Car Utilization -->
+    <div class="card">
+      <div class="card-header fw-bold"><i class="bi bi-pie-chart me-2 text-info"></i>Car Utilization Report</div>
+      <div class="card-body">
+        <div *ngFor="let e of utilizationEntries" class="mb-3">
+          <div class="d-flex justify-content-between mb-1">
+            <span class="fw-semibold">{{e[0]}}</span>
+            <span class="badge bg-info text-dark">{{e[1]}} rentals</span>
+          </div>
+          <div class="progress" style="height:10px">
+            <div class="progress-bar bg-info" [style.width.%]="getPercent(e[1], utilizationEntries)"></div>
+          </div>
+        </div>
+        <p *ngIf="utilizationEntries.length === 0" class="text-muted text-center py-3">No utilization data available</p>
+      </div>
+    </div>
+  </div>
+</div>

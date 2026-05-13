@@ -1,0 +1,56 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="logo-icon">CC</div>
+      <h2>Create Account</h2>
+      <p>Register to access CarCaddy</p>
+    </div>
+
+    <div *ngIf="error" class="cc-alert cc-alert-error">{{ error }}</div>
+    <div *ngIf="success" class="cc-alert cc-alert-success">{{ success }}</div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label class="cc-label">Username</label>
+        <input type="text" class="cc-input w-100" formControlName="username" placeholder="Enter username" />
+        <div *ngIf="f['username'].touched && f['username'].errors?.['required']" class="field-error">Username required</div>
+        <div *ngIf="f['username'].touched && f['username'].errors?.['minlength']" class="field-error">Min 3 characters</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="cc-label">Password</label>
+        <input type="password" class="cc-input w-100" formControlName="password" placeholder="Min 6 characters" />
+        <div *ngIf="f['password'].touched && f['password'].errors?.['required']" class="field-error">Password required</div>
+        <div *ngIf="f['password'].touched && f['password'].errors?.['minlength']" class="field-error">Min 6 characters</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="cc-label">Role</label>
+        <select class="cc-select w-100" formControlName="role">
+          <option value="ROLE_ADMIN">Administrator</option>
+          <option value="ROLE_EMPLOYEE">Employee</option>
+          <option value="ROLE_CUSTOMER">Customer</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="cc-label">Security Question (optional)</label>
+        <input type="text" class="cc-input w-100" formControlName="securityQuestion" placeholder="e.g. What is your pet's name?" />
+      </div>
+
+      <div class="mb-4">
+        <label class="cc-label">Security Answer</label>
+        <input type="text" class="cc-input w-100" formControlName="securityAnswer" placeholder="Your answer" />
+      </div>
+
+      <button type="submit" class="btn-cc-primary w-100" [disabled]="loading">
+        <span *ngIf="loading" class="cc-spinner me-2"></span>
+        {{ loading ? 'Registering...' : 'Register' }}
+      </button>
+    </form>
+
+    <div class="text-center mt-3">
+      <a routerLink="/login" class="link-muted">Already have an account? Sign in</a>
+    </div>
+  </div>
+</div>

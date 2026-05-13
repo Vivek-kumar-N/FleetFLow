@@ -15,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/maintenance")
 @Slf4j
+@CrossOrigin(origins = "*")
 public class MaintenanceController {
 
     private final IMaintenanceService service;
@@ -57,8 +58,22 @@ public class MaintenanceController {
     
 
     // Update Status
-    @PutMapping("/{id}/status")
+    @PatchMapping("/{id}/status")
     public ResponseEntity<MaintenanceDto> updateStatus(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, Object> body) {
+
+        log.info("API: Updating maintenance ID {} status", id);
+
+        String statusStr = (String) body.get("status");
+        MaintenanceStatus status = MaintenanceStatus.valueOf(statusStr);
+
+        return ResponseEntity.ok(service.updateStatus(id, status));
+    }
+
+    // Update Status via query param (backward compat)
+    @PutMapping("/{id}/status")
+    public ResponseEntity<MaintenanceDto> updateStatusParam(
             @PathVariable Long id,
             @RequestParam MaintenanceStatus status) {
 

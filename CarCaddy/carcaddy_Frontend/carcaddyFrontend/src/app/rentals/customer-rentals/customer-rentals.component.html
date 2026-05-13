@@ -1,0 +1,112 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-car-front-fill text-primary me-2"></i>My Rentals</h5>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="!customerId"><i class="bi bi-plus-lg me-1"></i>New Booking</button>
+  </div>
+
+  <div *ngIf="!customerId && !loading" class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Your account is not linked to a customer profile. Please contact an employee to register.</div>
+  <div *ngIf="success" class="alert alert-success alert-dismissible"><button type="button" class="btn-close" (click)="success=''"></button>{{success}}</div>
+  <div *ngIf="error" class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" (click)="error=''"></button>{{error}}</div>
+  <div *ngIf="loading" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+
+  <div *ngIf="!loading && customerId">
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='active'}" (click)="activeTab='active'" href="javascript:void(0)"><i class="bi bi-play-circle me-1"></i>Active ({{activeBookings.length}})</a></li>
+      <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='history'}" (click)="activeTab='history'" href="javascript:void(0)"><i class="bi bi-clock-history me-1"></i>History ({{historyBookings.length}})</a></li>
+    </ul>
+
+    <!-- Active Bookings -->
+    <div *ngIf="activeTab === 'active'">
+      <div *ngFor="let b of activeBookings" class="booking-card mb-3">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h6 class="fw-bold mb-1">Booking #{{b.bookingId}}</h6>
+            <div class="text-muted small mb-1"><i class="bi bi-car-front me-1"></i>{{b.car?.model || 'Car allocated'}} ({{b.car?.registrationNumber}})</div>
+            <div class="text-muted small mb-1"><i class="bi bi-calendar me-1"></i>{{b.startDate | date:'dd MMM yyyy'}} → {{b.endDate | date:'dd MMM yyyy'}}</div>
+            <div class="text-muted small"><i class="bi bi-people me-1"></i>{{b.passengerCount}} passengers</div>
+          </div>
+          <div class="text-end">
+            <span class="badge mb-2 d-block" [ngClass]="{'bg-primary':b.bookingStatus==='CONFIRMED','bg-success':b.bookingStatus==='ACTIVE','bg-warning text-dark':b.bookingStatus==='MODIFIED'}">{{b.bookingStatus}}</span>
+            <div class="fw-bold text-success">₹{{b.totalFare | number:'1.0-0'}}</div>
+            <div *ngIf="b.discount" class="text-muted small">{{b.discount}}% discount applied</div>
+          </div>
+        </div>
+        <div class="mt-2 d-flex gap-2">
+          <button class="btn btn-sm btn-outline-warning" (click)="openModifyModal(b)" [disabled]="!canModify(b)"><i class="bi bi-pencil me-1"></i>Modify</button>
+          <button class="btn btn-sm btn-outline-danger" (click)="cancelBooking(b)" [disabled]="!canCancel(b)"><i class="bi bi-x-circle me-1"></i>Cancel</button>
+        </div>
+      </div>
+      <div *ngIf="activeBookings.length === 0" class="text-center text-muted py-4">
+        <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>No active bookings. <a href="javascript:void(0)" (click)="openCreateModal()">Book a car now!</a>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div *ngIf="activeTab === 'history'">
+      <div class="card">
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>ID</th><th>Car</th><th>Start</th><th>End</th><th>Fare</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let b of historyBookings">
+                <td>#{{b.bookingId}}</td>
+                <td>{{b.car?.model}} <small class="text-muted">({{b.car?.registrationNumber}})</small></td>
+                <td>{{b.startDate | date:'dd MMM yyyy'}}</td>
+                <td>{{b.endDate | date:'dd MMM yyyy'}}</td>
+                <td>₹{{b.totalFare | number:'1.0-0'}}</td>
+                <td><span class="badge" [ngClass]="{'bg-success':b.bookingStatus==='COMPLETED','bg-danger':b.bookingStatus==='CANCELLED'}">{{b.bookingStatus}}</span></td>
+              </tr>
+              <tr *ngIf="historyBookings.length === 0"><td colspan="6" class="text-center text-muted py-3">No booking history</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Booking Modal -->
+<div class="modal fade show d-block" *ngIf="showCreateModal" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white"><h5 class="modal-title">New Car Booking</h5><button class="btn-close btn-close-white" (click)="closeModals()"></button></div>
+      <div class="modal-body">
+        <form [formGroup]="bookingForm">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Car Model *</label><input class="form-control" formControlName="model" placeholder="e.g. Swift, Innova..."></div>
+            <div class="col-md-6"><label class="form-label">Category *</label><select class="form-select" formControlName="category"><option *ngFor="let c of categories" [value]="c">{{c}}</option></select></div>
+            <div class="col-md-6"><label class="form-label">Start Date *</label><input type="date" class="form-control" formControlName="startDate"></div>
+            <div class="col-md-6"><label class="form-label">End Date *</label><input type="date" class="form-control" formControlName="endDate"></div>
+            <div class="col-md-6"><label class="form-label">Passengers *</label><input type="number" class="form-control" formControlName="passengerCount" min="1" max="10"></div>
+          </div>
+        </form>
+        <div *ngIf="loyaltyDiscount > 0" class="alert alert-success mt-3 mb-0"><i class="bi bi-tag-fill me-1"></i>Your <strong>{{loyaltyDiscount}}% loyalty discount</strong> will be applied automatically!</div>
+        <div *ngIf="estimatedFare > 0" class="alert alert-info mt-2 mb-0"><i class="bi bi-calculator me-1"></i>Estimated Fare: <strong>₹{{estimatedFare | number:'1.0-0'}}</strong></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn btn-primary" (click)="createBooking()" [disabled]="submitting"><span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>Book Now</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modify Modal -->
+<div class="modal fade show d-block" *ngIf="showModifyModal" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Modify Booking #{{selectedBooking?.bookingId}}</h5><button class="btn-close" (click)="closeModals()"></button></div>
+      <div class="modal-body">
+        <form [formGroup]="modifyForm">
+          <div class="mb-3"><label class="form-label">New Start Date</label><input type="date" class="form-control" formControlName="startDate"></div>
+          <div class="mb-3"><label class="form-label">New End Date</label><input type="date" class="form-control" formControlName="endDate"></div>
+          <div class="mb-3"><label class="form-label">New Model (optional)</label><input class="form-control" formControlName="model" placeholder="Leave blank to keep current"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn btn-warning" (click)="modifyBooking()" [disabled]="submitting">Modify</button>
+      </div>
+    </div>
+  </div>
+</div>

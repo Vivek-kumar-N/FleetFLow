@@ -18,7 +18,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/bookings")
+@RequestMapping("/api/rentals")
+@CrossOrigin(origins = "*")
 public class BookingController {
 
     private static final Logger log = LoggerFactory.getLogger(BookingController.class);

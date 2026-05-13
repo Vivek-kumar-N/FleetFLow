@@ -1,0 +1,33 @@
+<div class="container-fluid py-3">
+  <h5 class="fw-bold mb-3"><i class="bi bi-tools text-info me-2"></i>Car Maintenance Status</h5>
+  <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+  <div *ngIf="loading" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+
+  <div *ngIf="!loading">
+    <div *ngIf="!rentedCarReg" class="text-center py-5 text-muted">
+      <i class="bi bi-car-front fs-1 d-block mb-3"></i>
+      <p>You don't have an active rental. Maintenance status is only available for currently rented cars.</p>
+    </div>
+
+    <div *ngIf="rentedCarReg">
+      <div class="alert alert-info"><i class="bi bi-car-front me-2"></i>Showing maintenance records for your rented car: <strong>{{rentedCarReg}}</strong></div>
+      <div class="card">
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-dark"><tr><th>ID</th><th>Type</th><th>Scheduled</th><th>Status</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of maintenanceRecords">
+                <td>{{r.maintenanceId}}</td>
+                <td><span class="badge" [ngClass]="{'bg-danger':r.maintenanceType==='EMERGENCY','bg-warning text-dark':r.maintenanceType==='ROUTINE','bg-info text-dark':r.maintenanceType==='REPAIR'}">{{r.maintenanceType}}</span></td>
+                <td>{{r.scheduledDate | date:'dd MMM yyyy'}}</td>
+                <td><span class="badge" [ngClass]="{'bg-secondary':r.status==='SCHEDULED','bg-warning text-dark':r.status==='IN_PROGRESS','bg-success':r.status==='COMPLETED','bg-danger':r.status==='CANCELLED'}">{{r.status}}</span></td>
+                <td>{{r.description || '-'}}</td>
+              </tr>
+              <tr *ngIf="maintenanceRecords.length === 0"><td colspan="5" class="text-center text-muted py-3">No maintenance records for this car</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

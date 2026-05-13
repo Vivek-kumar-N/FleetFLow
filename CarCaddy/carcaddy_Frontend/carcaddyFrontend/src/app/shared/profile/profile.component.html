@@ -1,0 +1,86 @@
+<div class="topbar">
+  <div>
+    <div class="topbar-section">PROFILE</div>
+    <div class="topbar-title">Account settings & security</div>
+  </div>
+</div>
+
+<div class="cc-page">
+  <div class="cc-page-header">
+    <div>
+      <h1 class="cc-page-title">My Profile</h1>
+      <div class="cc-page-subtitle">{{ authService.getUsername() }} · {{ authService.getRole().replace('ROLE_', '') }}</div>
+    </div>
+  </div>
+
+  <div *ngIf="success" class="cc-alert cc-alert-success">{{ success }}</div>
+  <div *ngIf="error" class="cc-alert cc-alert-error">{{ error }}</div>
+
+  <div class="cc-tabs">
+    <div class="cc-tab" [class.active]="activeTab === 'password'" (click)="activeTab = 'password'">Change Password</div>
+    <div class="cc-tab" [class.active]="activeTab === 'username'" (click)="activeTab = 'username'">Update Username</div>
+    <div class="cc-tab" [class.active]="activeTab === 'security'" (click)="activeTab = 'security'">Security Question</div>
+  </div>
+
+  <div class="profile-content">
+    <!-- Change Password -->
+    <div *ngIf="activeTab === 'password'" class="cc-card" style="max-width:480px;">
+      <h6 class="card-section-title">Change Password</h6>
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+        <div class="mb-3">
+          <label class="cc-label">Current Password</label>
+          <input type="password" class="cc-input w-100" formControlName="currentPassword" />
+        </div>
+        <div class="mb-4">
+          <label class="cc-label">New Password</label>
+          <input type="password" class="cc-input w-100" formControlName="newPassword" placeholder="Min 6 characters" />
+        </div>
+        <button type="submit" class="btn-cc-primary" [disabled]="loading || passwordForm.invalid">
+          <span *ngIf="loading" class="cc-spinner me-2"></span>
+          Change Password
+        </button>
+      </form>
+    </div>
+
+    <!-- Update Username -->
+    <div *ngIf="activeTab === 'username'" class="cc-card" style="max-width:480px;">
+      <h6 class="card-section-title">Update Username</h6>
+      <div class="cc-alert cc-alert-warning mb-3" style="font-size:0.8rem;">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Updating your username will log you out. You'll need to sign in again.
+      </div>
+      <form [formGroup]="usernameForm" (ngSubmit)="updateUsername()">
+        <div class="mb-3">
+          <label class="cc-label">Current Username</label>
+          <input type="text" class="cc-input w-100" [value]="authService.getUsername()" readonly />
+        </div>
+        <div class="mb-4">
+          <label class="cc-label">New Username</label>
+          <input type="text" class="cc-input w-100" formControlName="newUsername" placeholder="Min 3 characters" />
+        </div>
+        <button type="submit" class="btn-cc-primary" [disabled]="loading || usernameForm.invalid">
+          Update Username
+        </button>
+      </form>
+    </div>
+
+    <!-- Security Question -->
+    <div *ngIf="activeTab === 'security'" class="cc-card" style="max-width:480px;">
+      <h6 class="card-section-title">Security Question</h6>
+      <form [formGroup]="securityForm" (ngSubmit)="updateSecurityQuestion()">
+        <div class="mb-3">
+          <label class="cc-label">Security Question</label>
+          <input type="text" class="cc-input w-100" formControlName="securityQuestion"
+                 placeholder="e.g. What is your pet's name?" />
+        </div>
+        <div class="mb-4">
+          <label class="cc-label">Answer</label>
+          <input type="text" class="cc-input w-100" formControlName="securityAnswer" placeholder="Your answer" />
+        </div>
+        <button type="submit" class="btn-cc-primary" [disabled]="loading || securityForm.invalid">
+          Save Security Question
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

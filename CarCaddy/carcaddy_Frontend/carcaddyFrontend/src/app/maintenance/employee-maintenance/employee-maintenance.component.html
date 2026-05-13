@@ -1,0 +1,83 @@
+<div class="container-fluid py-3">
+  <h5 class="fw-bold mb-3"><i class="bi bi-tools text-warning me-2"></i>Maintenance Overview</h5>
+  <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="stat-card bg-warning text-white"><div class="stat-value">{{upcoming.length}}</div><div class="stat-label">Upcoming</div></div></div>
+    <div class="col-md-4"><div class="stat-card bg-danger text-white"><div class="stat-value">{{overdue.length}}</div><div class="stat-label">Overdue</div></div></div>
+    <div class="col-md-4"><div class="stat-card bg-info text-white"><div class="stat-value">{{records.length}}</div><div class="stat-label">Total Records</div></div></div>
+  </div>
+
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='all'}" (click)="activeTab='all'" href="javascript:void(0)">All Records</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='upcoming'}" (click)="activeTab='upcoming'" href="javascript:void(0)">Upcoming <span class="badge bg-warning text-dark ms-1">{{upcoming.length}}</span></a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='overdue'}" (click)="activeTab='overdue'" href="javascript:void(0)">Overdue <span class="badge bg-danger ms-1">{{overdue.length}}</span></a></li>
+  </ul>
+
+  <div *ngIf="activeTab === 'all'">
+    <div class="card mb-3">
+      <div class="card-body py-2">
+        <div class="row g-2">
+          <div class="col-md-5"><select class="form-select form-select-sm" [(ngModel)]="typeFilter" (change)="applyFilters()"><option value="">All Types</option><option *ngFor="let t of types" [value]="t">{{t}}</option></select></div>
+          <div class="col-md-5"><select class="form-select form-select-sm" [(ngModel)]="statusFilter" (change)="applyFilters()"><option value="">All Status</option><option *ngFor="let s of statuses" [value]="s">{{s}}</option></select></div>
+          <div class="col-md-2"><button class="btn btn-outline-secondary btn-sm w-100" (click)="typeFilter='';statusFilter='';applyFilters()">Reset</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body p-0">
+        <div *ngIf="loading" class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+        <table *ngIf="!loading" class="table table-hover mb-0">
+          <thead class="table-dark"><tr><th>ID</th><th>Car</th><th>Type</th><th>Scheduled</th><th>Cost</th><th>Performed By</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let r of filteredRecords">
+              <td>{{r.maintenanceId}}</td>
+              <td class="fw-semibold">{{r.registrationNumber}}</td>
+              <td><span class="badge" [ngClass]="{'bg-danger':r.maintenanceType==='EMERGENCY','bg-warning text-dark':r.maintenanceType==='ROUTINE','bg-info text-dark':r.maintenanceType==='REPAIR'}">{{r.maintenanceType}}</span></td>
+              <td>{{r.scheduledDate | date:'dd MMM yyyy'}}</td>
+              <td>₹{{r.cost | number:'1.0-0'}}</td>
+              <td>{{r.performedBy || '-'}}</td>
+              <td><span class="badge" [ngClass]="{'bg-secondary':r.status==='SCHEDULED','bg-warning text-dark':r.status==='IN_PROGRESS','bg-success':r.status==='COMPLETED','bg-danger':r.status==='CANCELLED'}">{{r.status}}</span></td>
+            </tr>
+            <tr *ngIf="filteredRecords.length === 0"><td colspan="7" class="text-center text-muted py-4">No records</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="activeTab === 'upcoming'" class="card">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-warning"><tr><th>Car</th><th>Type</th><th>Scheduled Date</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let r of upcoming">
+            <td class="fw-semibold">{{r.registrationNumber}}</td>
+            <td><span class="badge" [ngClass]="{'bg-danger':r.maintenanceType==='EMERGENCY','bg-warning text-dark':r.maintenanceType==='ROUTINE','bg-info text-dark':r.maintenanceType==='REPAIR'}">{{r.maintenanceType}}</span></td>
+            <td>{{r.scheduledDate | date:'dd MMM yyyy'}}</td>
+            <td>{{r.description || '-'}}</td>
+          </tr>
+          <tr *ngIf="upcoming.length === 0"><td colspan="4" class="text-center text-muted py-3">No upcoming maintenance</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div *ngIf="activeTab === 'overdue'" class="card">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-danger"><tr><th>Car</th><th>Type</th><th>Scheduled Date</th><th>Days Overdue</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let r of overdue">
+            <td class="fw-semibold">{{r.registrationNumber}}</td>
+            <td><span class="badge bg-danger">{{r.maintenanceType}}</span></td>
+            <td>{{r.scheduledDate | date:'dd MMM yyyy'}}</td>
+            <td class="text-danger fw-bold">Overdue</td>
+          </tr>
+          <tr *ngIf="overdue.length === 0"><td colspan="4" class="text-center text-muted py-3">No overdue maintenance</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,34 @@
+<div class="container-fluid py-3">
+  <h5 class="fw-bold mb-3"><i class="bi bi-car-front text-success me-2"></i>Car Availability</h5>
+  <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+
+  <div class="card mb-3">
+    <div class="card-body py-2">
+      <div class="row g-2">
+        <div class="col-md-4"><input type="text" class="form-control form-control-sm" placeholder="Search by model..." [(ngModel)]="searchModel" (input)="applyFilters()"></div>
+        <div class="col-md-3"><select class="form-select form-select-sm" [(ngModel)]="categoryFilter" (change)="applyFilters()"><option value="">All Categories</option><option *ngFor="let c of categories.slice(1)" [value]="c">{{c}}</option></select></div>
+        <div class="col-md-3"><select class="form-select form-select-sm" [(ngModel)]="statusFilter" (change)="applyFilters()"><option value="">All Status</option><option value="AVAILABLE">Available</option><option value="RENTED">Rented</option><option value="MAINTENANCE">Maintenance</option></select></div>
+        <div class="col-md-2"><button class="btn btn-outline-secondary btn-sm w-100" (click)="searchModel='';categoryFilter='';statusFilter='AVAILABLE';applyFilters()">Reset</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+
+  <div *ngIf="!loading" class="row g-3">
+    <div *ngFor="let car of filteredCars" class="col-md-4 col-sm-6">
+      <div class="car-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="fw-bold">{{car.model}}</span>
+          <span class="badge" [ngClass]="{'bg-success':car.status==='AVAILABLE','bg-warning text-dark':car.status==='RENTED','bg-danger':car.status==='MAINTENANCE'}">{{car.status}}</span>
+        </div>
+        <div class="text-muted small mb-1"><i class="bi bi-tag me-1"></i>{{car.registrationNumber}}</div>
+        <div class="text-muted small mb-1"><i class="bi bi-grid me-1"></i>{{car.category}} · {{car.color}}</div>
+        <div class="text-muted small mb-1"><i class="bi bi-speedometer2 me-1"></i>{{car.mileage | number}} km</div>
+        <div class="text-muted small mb-2"><i class="bi bi-heart me-1"></i>Condition: {{car.carCondition}}</div>
+        <div class="fw-bold text-success">₹{{car.rentalRatePerDay}}/day</div>
+      </div>
+    </div>
+    <div *ngIf="filteredCars.length === 0" class="col-12 text-center text-muted py-4">No cars match the filters</div>
+  </div>
+</div>

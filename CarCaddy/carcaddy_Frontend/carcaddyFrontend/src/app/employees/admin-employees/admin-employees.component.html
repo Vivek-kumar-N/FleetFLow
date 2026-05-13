@@ -1,0 +1,205 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-people-fill text-primary me-2"></i>Employee Management</h5>
+    <div>
+      <button class="btn btn-outline-warning btn-sm me-2" (click)="autoDeactivate()"><i class="bi bi-clock-history me-1"></i>Auto-Deactivate Expired</button>
+      <button class="btn btn-primary btn-sm" (click)="openAddModal()"><i class="bi bi-plus-lg me-1"></i>Add Employee</button>
+    </div>
+  </div>
+
+  <div *ngIf="success" class="alert alert-success alert-dismissible"><button type="button" class="btn-close" (click)="success=''"></button>{{success}}</div>
+  <div *ngIf="error" class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" (click)="error=''"></button>{{error}}</div>
+
+  <!-- Filters -->
+  <div class="card mb-3">
+    <div class="card-body py-2">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-4">
+          <input type="text" class="form-control form-control-sm" placeholder="Search by name or email..." [(ngModel)]="searchTerm" (input)="applyFilters()">
+        </div>
+        <div class="col-md-3">
+          <select class="form-select form-select-sm" [(ngModel)]="designationFilter" (change)="applyFilters()">
+            <option value="">All Designations</option>
+            <option *ngFor="let d of designations" [value]="d">{{d}}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select form-select-sm" [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="">All Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-secondary btn-sm w-100" (click)="searchTerm='';designationFilter='';statusFilter='';applyFilters()">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="card-body p-0">
+      <div *ngIf="loading" class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+      <table *ngIf="!loading" class="table table-hover mb-0">
+        <thead class="table-dark">
+          <tr><th>ID</th><th>Name</th><th>Email</th><th>Contact</th><th>Designation</th><th>Type</th><th>Status</th><th>Expiry</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let emp of filteredEmployees">
+            <td>{{emp.employeeId}}</td>
+            <td class="fw-semibold">{{emp.employeeName}}</td>
+            <td>{{emp.emailId}}</td>
+            <td>{{emp.contactNumber}}</td>
+            <td><span class="badge bg-info text-dark">{{emp.designation}}</span></td>
+            <td><span class="badge" [ngClass]="emp.accountType==='PERMANENT'?'bg-primary':'bg-secondary'">{{emp.accountType}}</span></td>
+            <td>
+              <span class="badge" [ngClass]="emp.accountActive?'bg-success':'bg-danger'">
+                {{emp.accountActive ? 'Active' : 'Inactive'}}
+              </span>
+            </td>
+            <td>{{emp.expiryDate ? (emp.expiryDate | date:'dd MMM yyyy') : '-'}}</td>
+            <td>
+              <button class="btn btn-xs btn-outline-primary me-1" title="Update Contact" (click)="openContactModal(emp)"><i class="bi bi-telephone"></i></button>
+              <button class="btn btn-xs btn-outline-warning me-1" title="Set Expiry" (click)="openExpiryModal(emp)" [disabled]="emp.accountType!=='TEMPORARY'"><i class="bi bi-calendar-event"></i></button>
+              <button class="btn btn-xs btn-outline-danger" title="Delete" (click)="openDeleteModal(emp)"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredEmployees.length === 0"><td colspan="9" class="text-center text-muted py-4">No employees found</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div class="modal fade show d-block" *ngIf="showAddModal" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Add New Employee</h5><button class="btn-close" (click)="closeModals()"></button></div>
+      <div class="modal-body">
+        <form [formGroup]="employeeForm">
+          <div class="row g-3">
+            
+            <div class="col-md-6">
+              <label class="form-label">Full Name *</label>
+              <input class="form-control" formControlName="employeeName" [ngClass]="{'is-invalid': employeeForm.get('employeeName')?.touched && employeeForm.get('employeeName')?.invalid}">
+              <div *ngIf="employeeForm.get('employeeName')?.touched && employeeForm.get('employeeName')?.errors?.['required']" class="text-danger small mt-1">Full name is required</div>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Email *</label>
+              <input type="email" class="form-control" formControlName="emailId" [ngClass]="{'is-invalid': employeeForm.get('emailId')?.touched && employeeForm.get('emailId')?.invalid}">
+              <div *ngIf="employeeForm.get('emailId')?.touched && employeeForm.get('emailId')?.errors?.['required']" class="text-danger small mt-1">Email is required</div>
+              <div *ngIf="employeeForm.get('emailId')?.touched && employeeForm.get('emailId')?.errors?.['email']" class="text-danger small mt-1">Valid email required</div>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Contact Number *</label>
+              <input class="form-control" formControlName="contactNumber" placeholder="10-digit mobile" [ngClass]="{'is-invalid': employeeForm.get('contactNumber')?.touched && employeeForm.get('contactNumber')?.invalid}">
+              <div *ngIf="employeeForm.get('contactNumber')?.touched && employeeForm.get('contactNumber')?.errors?.['required']" class="text-danger small mt-1">Contact number is required</div>
+              <div *ngIf="employeeForm.get('contactNumber')?.touched && employeeForm.get('contactNumber')?.errors?.['pattern']" class="text-danger small mt-1">Valid 10-digit number required</div>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Date of Birth *</label>
+              <input type="date" class="form-control" formControlName="dateOfBirth" [ngClass]="{'is-invalid': employeeForm.get('dateOfBirth')?.touched && employeeForm.get('dateOfBirth')?.invalid}">
+              <div *ngIf="employeeForm.get('dateOfBirth')?.touched && employeeForm.get('dateOfBirth')?.errors?.['required']" class="text-danger small mt-1">Date of birth is required</div>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Designation *</label>
+              <select class="form-select" formControlName="designation" [ngClass]="{'is-invalid': employeeForm.get('designation')?.touched && employeeForm.get('designation')?.invalid}">
+                <option value="" disabled>Select Designation</option>
+                <option *ngFor="let d of designations" [value]="d">{{d}}</option>
+              </select>
+              <div *ngIf="employeeForm.get('designation')?.touched && employeeForm.get('designation')?.errors?.['required']" class="text-danger small mt-1">Designation is required</div>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Account Type *</label>
+              <select class="form-select" formControlName="accountType" [ngClass]="{'is-invalid': employeeForm.get('accountType')?.touched && employeeForm.get('accountType')?.invalid}">
+                <option value="" disabled>Select Account Type</option>
+                <option *ngFor="let t of accountTypes" [value]="t">{{t}}</option>
+              </select>
+              <div *ngIf="employeeForm.get('accountType')?.touched && employeeForm.get('accountType')?.errors?.['required']" class="text-danger small mt-1">Account type is required</div>
+            </div>
+            
+            <div class="col-md-6" *ngIf="employeeForm.get('accountType')?.value === 'TEMPORARY'">
+              <label class="form-label">Expiry Date *</label>
+              <input type="date" class="form-control" formControlName="expiryDate" [ngClass]="{'is-invalid': employeeForm.get('expiryDate')?.touched && employeeForm.get('expiryDate')?.invalid}">
+              <div *ngIf="employeeForm.get('expiryDate')?.touched && employeeForm.get('expiryDate')?.errors?.['required']" class="text-danger small mt-1">Expiry date is required for temporary accounts</div>
+            </div>
+
+          </div>
+        </form>
+        <div class="alert alert-info mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>A default password will be auto-generated and displayed after creation.</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn btn-primary" (click)="submitEmployee()" [disabled]="submitting || employeeForm.invalid">
+          <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>Add Employee
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade show d-block" *ngIf="showDeleteModal" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white"><h5 class="modal-title">Confirm Delete</h5><button class="btn-close btn-close-white" (click)="closeModals()"></button></div>
+      <div class="modal-body">Delete employee <strong>{{selectedEmployee?.employeeName}}</strong>? This cannot be undone.</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn btn-danger" (click)="deleteEmployee()" [disabled]="submitting">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Expiry Modal -->
+<div class="modal fade show d-block" *ngIf="showExpiryModal" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Set Expiry Date — {{selectedEmployee?.employeeName}}</h5><button class="btn-close" (click)="closeModals()"></button></div>
+      <div class="modal-body">
+        <form [formGroup]="expiryForm">
+          <div class="mb-3">
+            <label class="form-label">Expiry Date *</label>
+            <input type="date" class="form-control" formControlName="expiryDate" [ngClass]="{'is-invalid': expiryForm.get('expiryDate')?.touched && expiryForm.get('expiryDate')?.invalid}">
+            <div *ngIf="expiryForm.get('expiryDate')?.touched && expiryForm.get('expiryDate')?.errors?.['required']" class="text-danger small mt-1">Expiry date is required</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn btn-warning" (click)="setExpiry()" [disabled]="submitting || expiryForm.invalid">Set Expiry</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Update Contact Modal -->
+<div class="modal fade show d-block" *ngIf="showContactModal" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Update Contact — {{selectedEmployee?.employeeName}}</h5><button class="btn-close" (click)="closeModals()"></button></div>
+      <div class="modal-body">
+        <form [formGroup]="contactForm">
+          <div class="mb-3">
+            <label class="form-label">New Contact Number *</label>
+            <input class="form-control" formControlName="contactNumber" placeholder="10-digit mobile" [ngClass]="{'is-invalid': contactForm.get('contactNumber')?.touched && contactForm.get('contactNumber')?.invalid}">
+            <div *ngIf="contactForm.get('contactNumber')?.touched && contactForm.get('contactNumber')?.errors?.['required']" class="text-danger small mt-1">Contact number is required</div>
+            <div *ngIf="contactForm.get('contactNumber')?.touched && contactForm.get('contactNumber')?.errors?.['pattern']" class="text-danger small mt-1">Valid 10-digit number required</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn btn-primary" (click)="updateContact()" [disabled]="submitting || contactForm.invalid">Update</button>
+      </div>
+    </div>
+  </div>
+</div>

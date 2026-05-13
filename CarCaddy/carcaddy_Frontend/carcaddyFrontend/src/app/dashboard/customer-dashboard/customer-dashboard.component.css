@@ -1,0 +1,12 @@
+.profile-card, .loyalty-card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px; }
+.avatar-circle { width: 56px; height: 56px; background: #e3f2fd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #1976d2; }
+.info-row { padding: 4px 0; font-size: 0.9rem; }
+.loyalty-points { font-size: 3rem; font-weight: 700; color: #f59e0b; }
+.loyalty-label { font-size: 0.85rem; color: #6b7280; text-transform: uppercase; }
+.car-card { border: 1px solid #e9ecef; border-radius: 10px; padding: 16px; text-align: center; transition: box-shadow 0.2s; }
+.car-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.car-icon { font-size: 2.5rem; color: #3b82f6; margin-bottom: 8px; }
+.car-model { font-weight: 600; margin-bottom: 6px; }
+.car-rate { font-size: 1.1rem; font-weight: 700; color: #059669; margin-top: 6px; }
+.card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 10px; }
+.card-header { background: #f8f9fa; border-radius: 10px 10px 0 0 !important; }

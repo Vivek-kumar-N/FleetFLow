@@ -1,1 +1,3 @@
-<p>maintenance works!</p>
+<app-admin-maintenance    *ngIf="authService.isAdmin()"></app-admin-maintenance>
+<app-employee-maintenance *ngIf="authService.isEmployee()"></app-employee-maintenance>
+<app-customer-maintenance *ngIf="authService.isCustomer()"></app-customer-maintenance>

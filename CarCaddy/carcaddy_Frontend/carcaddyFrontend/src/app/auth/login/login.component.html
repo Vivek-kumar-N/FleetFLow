@@ -1,0 +1,97 @@
+<div class="login-page">
+  <!-- Left Panel -->
+  <div class="login-left">
+    <div class="brand">
+      <div class="brand-icon">CC</div>
+      <div class="brand-name">CarCaddy</div>
+      <div class="brand-sub">Fleet Management System</div>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-value">360°</div>
+        <div class="feature-label">Fleet Visibility</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-value">5+</div>
+        <div class="feature-label">User Roles</div>
+      </div>
+      <div class="feature-card accent">
+        <div class="feature-value">Real-time</div>
+        <div class="feature-label">Dashboards</div>
+      </div>
+    </div>
+
+    <div class="feature-tags">
+      <span class="tag">Fleet Management</span>
+      <span class="tag">Bookings</span>
+      <span class="tag">Maintenance</span>
+      <span class="tag">Customers</span>
+      <span class="tag">Employees</span>
+      <span class="tag">Reports</span>
+      <span class="tag">Analytics</span>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="login-right">
+    <div class="login-card">
+      <h2 class="login-title">Welcome Back</h2>
+      <p class="login-subtitle">Sign in to your account</p>
+
+      <div *ngIf="error" class="cc-alert cc-alert-error">
+        <i class="bi bi-exclamation-circle me-2"></i>{{ error }}
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label class="cc-label">Username</label>
+          <div class="input-with-icon">
+            <i class="bi bi-at input-icon"></i>
+            <input
+              type="text"
+              class="cc-input w-100"
+              formControlName="username"
+              placeholder="your.username"
+            />
+          </div>
+          <div *ngIf="f['username'].touched && f['username'].errors?.['required']" class="field-error">
+            Username is required
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="cc-label">Password</label>
+          <div class="input-with-icon">
+            <i class="bi bi-lock input-icon"></i>
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              class="cc-input w-100"
+              formControlName="password"
+              placeholder="••••••••"
+            />
+            <button type="button" class="toggle-password" (click)="showPassword = !showPassword">
+              <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            </button>
+          </div>
+          <div *ngIf="f['password'].touched && f['password'].errors?.['required']" class="field-error">
+            Password is required
+          </div>
+        </div>
+
+        <button type="submit" class="btn-cc-primary w-100 login-btn" [disabled]="loading">
+          <span *ngIf="loading" class="cc-spinner me-2"></span>
+          <span *ngIf="!loading">Sign In <i class="bi bi-arrow-right ms-1"></i></span>
+          <span *ngIf="loading">Signing in...</span>
+        </button>
+      </form>
+
+      <div class="login-links">
+        <a routerLink="/forgot-password" class="link-muted">Forgot password?</a>
+        <a routerLink="/register" class="link-muted">Register</a>
+      </div>
+
+      <div class="login-version">CarCaddy Fleet Management &nbsp; v1.0.0</div>
+    </div>
+  </div>
+</div>

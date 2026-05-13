@@ -18,6 +18,7 @@ import java.util.List;
 @RequestMapping("/api/cars")
 @RequiredArgsConstructor
 @Slf4j
+@CrossOrigin(origins = "*")
 public class CarController {
 
     private final ICarService carService;
@@ -50,12 +51,18 @@ public class CarController {
     @PatchMapping("/{registrationNumber}/status")
     public Car updateCarStatus(
             @PathVariable String registrationNumber,
-            @RequestParam CarStatus status) {
+            @RequestBody(required = false) java.util.Map<String, String> body,
+            @RequestParam(required = false) CarStatus status) {
+
+        CarStatus finalStatus = status;
+        if (finalStatus == null && body != null && body.get("status") != null) {
+            finalStatus = CarStatus.valueOf(body.get("status"));
+        }
 
         log.info("API request: Update car status for {} to {}",
-                registrationNumber, status);
+                registrationNumber, finalStatus);
 
-        return carService.updateCarStatus(registrationNumber, status);
+        return carService.updateCarStatus(registrationNumber, finalStatus);
     }
 
     @PatchMapping("/{registrationNumber}/mileage")

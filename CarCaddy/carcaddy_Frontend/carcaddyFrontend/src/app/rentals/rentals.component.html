@@ -1,0 +1,3 @@
+<app-admin-rentals    *ngIf="authService.isAdmin()"></app-admin-rentals>
+<app-employee-rentals *ngIf="authService.isEmployee()"></app-employee-rentals>
+<app-customer-rentals *ngIf="authService.isCustomer()"></app-customer-rentals>

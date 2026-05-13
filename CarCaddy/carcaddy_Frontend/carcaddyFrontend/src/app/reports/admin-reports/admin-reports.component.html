@@ -1,0 +1,186 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Reports & Analytics</h5>
+    <button class="btn btn-outline-secondary btn-sm" (click)="print()"><i class="bi bi-printer me-1"></i>Print</button>
+  </div>
+
+  <!-- Date Range -->
+  <div class="card mb-3">
+    <div class="card-body py-2">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3"><label class="form-label small mb-1">Start Date</label><input type="date" class="form-control form-control-sm" [(ngModel)]="startDate"></div>
+        <div class="col-md-3"><label class="form-label small mb-1">End Date</label><input type="date" class="form-control form-control-sm" [(ngModel)]="endDate"></div>
+        <div class="col-md-2"><button class="btn btn-primary btn-sm w-100" (click)="loadAll()"><i class="bi bi-arrow-clockwise me-1"></i>Apply</button></div>
+        <div class="col-md-2"><button class="btn btn-outline-secondary btn-sm w-100" (click)="ngOnInit()">Reset</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <ul class="nav nav-tabs mb-3 flex-wrap">
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='revenue'}" (click)="activeTab='revenue'" href="javascript:void(0)">Revenue</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='fleet'}" (click)="activeTab='fleet'" href="javascript:void(0)">Fleet</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='customers'}" (click)="activeTab='customers'" href="javascript:void(0)">Customers</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='maintenance'}" (click)="activeTab='maintenance'" href="javascript:void(0)">Maintenance</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='profitability'}" (click)="activeTab='profitability'" href="javascript:void(0)">Profitability</a></li>
+  </ul>
+
+  <div *ngIf="loading" class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+
+  <!-- Revenue Tab -->
+  <div *ngIf="!loading && activeTab === 'revenue'">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="card text-center p-4">
+          <div class="report-value text-success">₹{{revenue | number:'1.0-0'}}</div>
+          <div class="text-muted">Total Revenue ({{startDate | date:'dd MMM'}} – {{endDate | date:'dd MMM yyyy'}})</div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header fw-bold">Income by Car Model</div>
+          <div class="card-body">
+            <div *ngFor="let e of incomeEntries" class="mb-2">
+              <div class="d-flex justify-content-between mb-1"><span class="small">{{e[0]}}</span><span class="small fw-bold text-success">₹{{e[1] | number:'1.0-0'}}</span></div>
+              <div class="progress" style="height:8px"><div class="progress-bar bg-success" [style.width.%]="getPercent(e[1], incomeEntries)"></div></div>
+            </div>
+            <p *ngIf="incomeEntries.length === 0" class="text-muted text-center">No revenue data</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fleet Tab -->
+  <div *ngIf="!loading && activeTab === 'fleet'">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header fw-bold">Fleet Health</div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2"><span>Available</span><span class="badge bg-success">{{fleetHealth?.availableCars || 0}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>Rented</span><span class="badge bg-warning text-dark">{{fleetHealth?.rentedCars || 0}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>In Maintenance</span><span class="badge bg-danger">{{fleetHealth?.maintenanceCars || 0}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>Due for Service</span><span class="badge bg-secondary">{{fleetHealth?.carsDueForService || 0}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>Avg Mileage</span><span class="fw-bold">{{fleetHealth?.averageMileage || 0 | number:'1.0-0'}} km</span></div>
+            <div class="progress mt-3" style="height:12px"><div class="progress-bar bg-success" [style.width.%]="fleetHealth?.fleetUtilization || 0"></div></div>
+            <small class="text-muted">{{fleetHealth?.fleetUtilization || 0 | number:'1.0-1'}}% fleet utilization</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header fw-bold">Car Utilization (Rental Count)</div>
+          <div class="card-body">
+            <div *ngFor="let e of utilizationEntries" class="mb-2">
+              <div class="d-flex justify-content-between mb-1"><span class="small">{{e[0]}}</span><span class="small fw-bold">{{e[1]}} rentals</span></div>
+              <div class="progress" style="height:8px"><div class="progress-bar bg-info" [style.width.%]="getPercent(e[1], utilizationEntries)"></div></div>
+            </div>
+            <p *ngIf="utilizationEntries.length === 0" class="text-muted text-center">No data</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header fw-bold">Cars with Minimal Bookings</div>
+          <div class="card-body">
+            <div class="row g-2">
+              <div *ngFor="let e of minimalEntries" class="col-md-3 col-sm-4 col-6">
+                <div class="p-2 bg-light rounded text-center border">
+                  <div class="fw-bold small">{{e[0]}}</div>
+                  <span class="badge bg-warning text-dark">{{e[1]}} bookings</span>
+                </div>
+              </div>
+              <div *ngIf="minimalEntries.length === 0" class="col-12 text-center text-muted">No data</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customers Tab -->
+  <div *ngIf="!loading && activeTab === 'customers'">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header fw-bold">Customers with Maximum Bookings</div>
+          <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+              <thead class="table-light"><tr><th>#</th><th>Customer</th><th>Bookings</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let c of topCustomers; let i = index">
+                  <td><span class="badge bg-primary">{{i+1}}</span></td>
+                  <td>{{c.customerName || c[0]}}</td>
+                  <td><span class="badge bg-success">{{c.bookingCount || c[1]}}</span></td>
+                </tr>
+                <tr *ngIf="topCustomers.length === 0"><td colspan="3" class="text-center text-muted py-3">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header fw-bold">Customer Loyalty Analytics</div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2"><span>Total Points Issued</span><span class="fw-bold text-primary">{{loyaltyAnalytics?.totalPointsIssued || 0}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>Avg Points/Customer</span><span class="fw-bold">{{loyaltyAnalytics?.averageLoyaltyPoints || 0 | number:'1.0-1'}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>Eligible for Free Rental</span><span class="fw-bold text-success">{{loyaltyAnalytics?.customersEligibleForFreeRental || 0}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>Top Customer Points</span><span class="fw-bold text-warning">{{loyaltyAnalytics?.topCustomerPoints || 0}}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Maintenance Tab -->
+  <div *ngIf="!loading && activeTab === 'maintenance'">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header fw-bold">Maintenance Cost by Car Model</div>
+          <div class="card-body">
+            <div *ngFor="let e of maintenanceCostModelEntries" class="mb-2">
+              <div class="d-flex justify-content-between mb-1"><span class="small">{{e[0]}}</span><span class="small fw-bold text-danger">₹{{e[1] | number:'1.0-0'}}</span></div>
+              <div class="progress" style="height:8px"><div class="progress-bar bg-danger" [style.width.%]="getPercent(e[1], maintenanceCostModelEntries)"></div></div>
+            </div>
+            <p *ngIf="maintenanceCostModelEntries.length === 0" class="text-muted text-center">No data</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header fw-bold">Maintenance Cost by Period</div>
+          <div class="card-body">
+            <div *ngFor="let e of maintenanceCostPeriodEntries" class="mb-2">
+              <div class="d-flex justify-content-between mb-1"><span class="small">{{e[0]}}</span><span class="small fw-bold text-danger">₹{{e[1] | number:'1.0-0'}}</span></div>
+              <div class="progress" style="height:8px"><div class="progress-bar bg-warning" [style.width.%]="getPercent(e[1], maintenanceCostPeriodEntries)"></div></div>
+            </div>
+            <p *ngIf="maintenanceCostPeriodEntries.length === 0" class="text-muted text-center">No data</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profitability Tab -->
+  <div *ngIf="!loading && activeTab === 'profitability'">
+    <div class="card">
+      <div class="card-header fw-bold">Most & Least Profitable Cars (Rental Income vs Maintenance Cost)</div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-dark"><tr><th>Car / Model</th><th>Net Profit/Loss</th><th>Indicator</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let e of profitabilityEntries" [ngClass]="{'table-success': +e[1] >= 0, 'table-danger': +e[1] < 0}">
+              <td class="fw-semibold">{{e[0]}}</td>
+              <td class="fw-bold" [ngClass]="+e[1] >= 0 ? 'text-success' : 'text-danger'">₹{{e[1] | number:'1.0-0'}}</td>
+              <td><span class="badge" [ngClass]="+e[1] >= 0 ? 'bg-success' : 'bg-danger'">{{+e[1] >= 0 ? 'Profitable' : 'Loss'}}</span></td>
+            </tr>
+            <tr *ngIf="profitabilityEntries.length === 0"><td colspan="3" class="text-center text-muted py-3">No profitability data</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

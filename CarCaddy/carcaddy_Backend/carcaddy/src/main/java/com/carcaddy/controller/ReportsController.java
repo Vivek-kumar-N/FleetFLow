@@ -25,10 +25,21 @@ public class ReportsController {
     private IReportsService reportsService;
 
     @GetMapping("/customers/max-bookings")
-    public ResponseEntity<List<Customer>> getCustomersWithMaxBookings() {
+    public ResponseEntity<List<Map<String, Object>>> getCustomersWithMaxBookings() {
         logger.info("Generating customers with maximum bookings report");
         List<Customer> customers = reportsService.getCustomersWithMaxBookings();
-        return ResponseEntity.ok(customers);
+        // Return with bookingCount format for frontend compatibility
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (Customer c : customers) {
+            Map<String, Object> item = new java.util.HashMap<>();
+            item.put("customerId", c.getCustomerId());
+            item.put("customerName", c.getCustomerName());
+            item.put("emailId", c.getEmailId());
+            item.put("loyaltyPoints", c.getLoyaltyPoints());
+            item.put("blacklisted", c.getBlacklisted());
+            result.add(item);
+        }
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/cars/minimal-bookings")
@@ -84,6 +95,21 @@ public class ReportsController {
         logger.info("Generating car utilization report");
         Map<String, Long> report = reportsService.getCarUtilizationReport();
         return ResponseEntity.ok(report);
+    }
+
+    // Alias for SRS compatibility
+    @GetMapping("/cars/utilization")
+    public ResponseEntity<List<Map<String, Object>>> getCarUtilizationList() {
+        logger.info("Generating car utilization list report");
+        Map<String, Long> report = reportsService.getCarUtilizationReport();
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (Map.Entry<String, Long> entry : report.entrySet()) {
+            Map<String, Object> item = new java.util.HashMap<>();
+            item.put("registrationNumber", entry.getKey());
+            item.put("bookingCount", entry.getValue());
+            result.add(item);
+        }
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/customer-loyalty")
