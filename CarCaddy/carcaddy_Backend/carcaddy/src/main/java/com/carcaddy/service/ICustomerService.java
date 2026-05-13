@@ -24,5 +24,10 @@ public interface ICustomerService {
     Integer getLoyaltyPoints(String customerId);
 
     void deleteCustomer(String customerId);
-    
+
+    double calculateLoyaltyDiscount(String customerId);
+
+    boolean isEligibleForFreeRental(String customerId);
+
+    List<Customer> getCustomersWithMaximumBookings();
 }
