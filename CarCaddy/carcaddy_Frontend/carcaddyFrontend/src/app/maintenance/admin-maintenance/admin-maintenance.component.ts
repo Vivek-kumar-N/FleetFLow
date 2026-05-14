@@ -30,6 +30,9 @@ export class AdminMaintenanceComponent implements OnInit {
   types = ['ROUTINE', 'REPAIR', 'EMERGENCY'];
   statuses = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
 
+  showRoutineModal = false;
+  routineForm: FormGroup;
+
   constructor(private maintenanceService: MaintenanceService, private fb: FormBuilder) {
     this.maintenanceForm = this.fb.group({
       registrationNumber: ['', Validators.required],
@@ -46,6 +49,13 @@ export class AdminMaintenanceComponent implements OnInit {
       cost: [0],
       performedBy: [''],
       description: ['']
+    });
+    this.routineForm = this.fb.group({
+      registrationNumber: ['', Validators.required],
+      scheduledDate: ['', Validators.required],
+      description: [''],
+      cost: [0, Validators.min(0)],
+      performedBy: ['']
     });
   }
 
@@ -70,7 +80,8 @@ export class AdminMaintenanceComponent implements OnInit {
   openAddModal(): void { this.maintenanceForm.reset({ maintenanceType: 'ROUTINE', status: 'SCHEDULED', cost: 0 }); this.showAddModal = true; this.error = ''; this.success = ''; }
   openStatusModal(r: Maintenance): void { this.selectedRecord = r; this.statusForm.patchValue({ status: r.status, cost: r.cost, performedBy: r.performedBy }); this.showStatusModal = true; }
   openDeleteModal(r: Maintenance): void { this.selectedRecord = r; this.showDeleteModal = true; }
-  closeModals(): void { this.showAddModal = false; this.showStatusModal = false; this.showDeleteModal = false; this.selectedRecord = null; this.submitting = false; }
+  openRoutineModal(): void { this.routineForm.reset({ cost: 0, scheduledDate: new Date().toISOString().split('T')[0] }); this.showRoutineModal = true; this.error = ''; this.success = ''; }
+  closeModals(): void { this.showAddModal = false; this.showStatusModal = false; this.showDeleteModal = false; this.showRoutineModal = false; this.selectedRecord = null; this.submitting = false; }
 
   submitMaintenance(): void {
     if (this.maintenanceForm.invalid) { this.maintenanceForm.markAllAsTouched(); return; }
@@ -101,12 +112,25 @@ export class AdminMaintenanceComponent implements OnInit {
   }
 
   scheduleRoutine(): void {
-    const dto: any = { maintenanceType: 'ROUTINE', status: 'SCHEDULED', cost: 0, scheduledDate: new Date().toISOString().split('T')[0], description: 'Auto-scheduled routine maintenance' };
+    if (this.routineForm.invalid) { this.routineForm.markAllAsTouched(); return; }
+    this.submitting = true;
+    const v = this.routineForm.value;
+    const dto: any = {
+      registrationNumber: v.registrationNumber,
+      maintenanceType: 'ROUTINE',
+      status: 'SCHEDULED',
+      cost: v.cost || 0,
+      scheduledDate: v.scheduledDate,
+      description: v.description || 'Routine maintenance',
+      performedBy: v.performedBy || ''
+    };
     this.maintenanceService.scheduleRoutine(dto).subscribe({
-      next: () => { this.success = 'Routine maintenance scheduled!'; this.loadRecords(); },
-      error: (err: any) => { this.error = AuthService.parseError(err); }
+      next: () => { this.success = 'Routine maintenance scheduled!'; this.closeModals(); this.loadRecords(); },
+      error: (err: any) => { this.submitting = false; this.error = AuthService.parseError(err); }
     });
   }
+
+  get rf() { return this.routineForm.controls; }
 
   get f() { return this.maintenanceForm.controls; }
 }
