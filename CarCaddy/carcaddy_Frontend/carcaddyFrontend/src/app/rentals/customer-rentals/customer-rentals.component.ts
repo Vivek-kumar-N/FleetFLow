@@ -56,14 +56,11 @@ export class CustomerRentalsComponent implements OnInit {
   ngOnInit(): void {
     this.carService.getAvailableCars().subscribe({ next: d => this.availableCars = d, error: () => {} });
     const username = this.authService.getUsername();
-    this.customerService.getAllCustomers().subscribe({
-      next: (customers) => {
-        const found = customers.find(c => c.emailId === username || c.customerId === username);
-        if (found) {
-          this.customerId = found.customerId!;
-          this.loadBookings();
-          this.customerService.getLoyaltyDiscount(this.customerId).subscribe({ next: (d: any) => { this.loyaltyDiscount = d.discountPercent || 0; }, error: () => {} });
-        }
+    this.customerService.getCustomerByUsername(username).subscribe({
+      next: (customer) => {
+        this.customerId = customer.customerId!;
+        this.loadBookings();
+        this.customerService.getLoyaltyDiscount(this.customerId).subscribe({ next: (d: any) => { this.loyaltyDiscount = d.discountPercent || 0; }, error: () => {} });
         this.loading = false;
       },
       error: () => { this.loading = false; }

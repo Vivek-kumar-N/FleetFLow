@@ -2,7 +2,9 @@ package com.carcaddy.controller;
 
 import com.carcaddy.dto.*;
 import com.carcaddy.entity.AppUser;
+import com.carcaddy.entity.Customer;
 import com.carcaddy.repository.AppUserRepository;
+import com.carcaddy.repository.CustomerRepository;
 import com.carcaddy.security.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final AppUserRepository userRepository;
+    private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -39,6 +42,26 @@ public class AuthController {
                     .body(Map.of("message", "Username already exists"));
         }
 
+        // For customer role, validate required customer fields upfront
+        if ("ROLE_CUSTOMER".equals(request.getRole())) {
+            if (request.getCustomerName() == null || request.getCustomerName().isBlank())
+                return ResponseEntity.badRequest().body(Map.of("message", "Full name is required for customer registration"));
+            if (request.getEmailId() == null || request.getEmailId().isBlank())
+                return ResponseEntity.badRequest().body(Map.of("message", "Email is required for customer registration"));
+            if (request.getContactNumber() == null || request.getContactNumber().isBlank())
+                return ResponseEntity.badRequest().body(Map.of("message", "Contact number is required for customer registration"));
+            if (request.getDrivingLicense() == null || request.getDrivingLicense().isBlank())
+                return ResponseEntity.badRequest().body(Map.of("message", "Driving license is required for customer registration"));
+            if (request.getAddress() == null || request.getAddress().isBlank())
+                return ResponseEntity.badRequest().body(Map.of("message", "Address is required for customer registration"));
+
+            if (customerRepository.findByEmailId(request.getEmailId()).isPresent())
+                return ResponseEntity.badRequest().body(Map.of("message", "A customer with this email already exists"));
+            if (customerRepository.findByDrivingLicense(request.getDrivingLicense()).isPresent())
+                return ResponseEntity.badRequest().body(Map.of("message", "A customer with this driving license already exists"));
+        }
+
+        // Create AppUser
         AppUser user = new AppUser();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -49,6 +72,27 @@ public class AuthController {
 
         AppUser saved = userRepository.save(user);
         log.info("User registered: {}", saved.getUsername());
+
+        // Auto-create and link Customer profile for ROLE_CUSTOMER
+        if ("ROLE_CUSTOMER".equals(request.getRole())) {
+            long count = customerRepository.count() + 1;
+            String customerId = String.format("CUST-%03d", count);
+
+            Customer customer = new Customer();
+            customer.setCustomerId(customerId);
+            customer.setCustomerName(request.getCustomerName());
+            customer.setEmailId(request.getEmailId());
+            customer.setContactNumber(request.getContactNumber());
+            customer.setDrivingLicense(request.getDrivingLicense());
+            customer.setAddress(request.getAddress());
+            customer.setOccupation(request.getOccupation());
+            customer.setLoyaltyPoints(0);
+            customer.setBlacklisted(false);
+            customer.setAppUser(saved); // link to AppUser
+
+            customerRepository.save(customer);
+            log.info("Customer profile auto-created and linked | customerId={}, username={}", customerId, saved.getUsername());
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
