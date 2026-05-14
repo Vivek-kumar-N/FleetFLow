@@ -57,4 +57,14 @@ export class ReportsService {
   getFleetHealthReport(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/fleet-health`);
   }
+
+  getServiceCenterPerformance(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/service-center-performance`);
+  }
+
+  getBookingTrends(startDate: string, endDate: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/booking-trends`, {
+      params: new HttpParams().set('startDate', startDate).set('endDate', endDate)
+    });
+  }
 }

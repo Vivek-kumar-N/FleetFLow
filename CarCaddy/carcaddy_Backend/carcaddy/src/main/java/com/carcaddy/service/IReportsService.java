@@ -18,4 +18,6 @@ public interface IReportsService {
     Map<String, Object> getCustomerLoyaltyAnalytics();
     Map<String, BigDecimal> getProfitabilityReport();
     Map<String, Object> getFleetHealthReport();
+    List<Map<String, Object>> getServiceCenterPerformance();
+    Map<String, Object> getBookingTrends(LocalDate startDate, LocalDate endDate);
 }
