@@ -18,6 +18,9 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
     // View customer by email (email_id is UNIQUE)
     Optional<Customer> findByEmailId(String emailId);
 
+    // Find customer linked to a specific AppUser username
+    Optional<Customer> findByAppUserUsername(String username);
+
     // View customer by driving license (driving_license is UNIQUE)
     Optional<Customer> findByDrivingLicense(String drivingLicense);
 

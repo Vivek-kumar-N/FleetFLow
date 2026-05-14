@@ -32,16 +32,13 @@ export class CustomerDashboardComponent implements OnInit {
     // Load available cars for all customers
     this.carService.getAvailableCars().subscribe({ next: d => this.availableCars = d, error: () => {} });
 
-    // Try to find customer by username (email match)
+    // Fetch customer profile directly by logged-in username
     const username = this.authService.getUsername();
-    this.customerService.getAllCustomers().subscribe({
-      next: (customers) => {
-        const found = customers.find(c => c.emailId === username || c.customerId === username);
-        if (found) {
-          this.customer = found;
-          this.customerId = found.customerId!;
-          this.loadCustomerData();
-        }
+    this.customerService.getCustomerByUsername(username).subscribe({
+      next: (customer) => {
+        this.customer = customer;
+        this.customerId = customer.customerId!;
+        this.loadCustomerData();
         this.loading = false;
       },
       error: () => { this.loading = false; }

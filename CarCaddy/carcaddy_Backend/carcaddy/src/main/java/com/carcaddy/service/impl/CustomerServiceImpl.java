@@ -262,4 +262,15 @@ public List<Customer> getCustomersWithMaximumBookings() {
         log.info("Customer deleted successfully | customerId={}", customerId);
     }
 
+    @Override
+    public Customer getCustomerByUsername(String username) {
+        log.info("CustomerServiceImpl.getCustomerByUsername() called | username={}", username);
+
+        return repository.findByAppUserUsername(username)
+                .orElseThrow(() -> {
+                    log.warn("Get customer by username failed: not found | username={}", username);
+                    return new InvalidEntityException("No customer profile linked to username: " + username);
+                });
+    }
+
 }

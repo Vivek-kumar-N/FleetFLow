@@ -30,4 +30,6 @@ public interface ICustomerService {
     boolean isEligibleForFreeRental(String customerId);
 
     List<Customer> getCustomersWithMaximumBookings();
+
+    Customer getCustomerByUsername(String username);
 }
