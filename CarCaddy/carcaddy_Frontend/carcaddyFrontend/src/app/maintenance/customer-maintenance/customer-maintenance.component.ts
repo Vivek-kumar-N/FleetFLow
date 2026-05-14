@@ -25,28 +25,23 @@ export class CustomerMaintenanceComponent implements OnInit {
 
   ngOnInit(): void {
     const username = this.authService.getUsername();
-    this.customerService.getAllCustomers().subscribe({
-      next: (customers) => {
-        const found = customers.find(c => c.emailId === username || c.customerId === username);
-        if (found) {
-          this.bookingService.getBookingsByCustomer(found.customerId!).subscribe({
-            next: (bookings) => {
-              const active = bookings.find(b => b.bookingStatus === 'ACTIVE' || b.bookingStatus === 'CONFIRMED');
-              if (active?.car?.registrationNumber) {
-                this.rentedCarReg = active.car.registrationNumber;
-                this.maintenanceService.getByCarRegistration(this.rentedCarReg).subscribe({
-                  next: (d: Maintenance[]) => { this.maintenanceRecords = d; this.loading = false; },
-                  error: () => { this.loading = false; }
-                });
-              } else {
-                this.loading = false;
-              }
-            },
-            error: () => { this.loading = false; }
-          });
-        } else {
-          this.loading = false;
-        }
+    this.customerService.getCustomerByUsername(username).subscribe({
+      next: (customer) => {
+        this.bookingService.getBookingsByCustomer(customer.customerId!).subscribe({
+          next: (bookings) => {
+            const active = bookings.find(b => b.bookingStatus === 'ACTIVE' || b.bookingStatus === 'CONFIRMED');
+            if (active?.car?.registrationNumber) {
+              this.rentedCarReg = active.car.registrationNumber;
+              this.maintenanceService.getByCarRegistration(this.rentedCarReg).subscribe({
+                next: (d: Maintenance[]) => { this.maintenanceRecords = d; this.loading = false; },
+                error: () => { this.loading = false; }
+              });
+            } else {
+              this.loading = false;
+            }
+          },
+          error: () => { this.loading = false; }
+        });
       },
       error: () => { this.loading = false; this.error = 'Failed to load data.'; }
     });
