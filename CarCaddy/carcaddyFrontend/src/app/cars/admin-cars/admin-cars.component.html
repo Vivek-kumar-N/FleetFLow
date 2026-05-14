@@ -60,14 +60,52 @@
       <div class="modal-body">
         <form [formGroup]="carForm">
           <div class="row g-3">
-            <div class="col-md-6"><label class="form-label">Registration Number *</label><input class="form-control" formControlName="registrationNumber" [readonly]="showEditModal"><div *ngIf="f['registrationNumber'].touched && f['registrationNumber'].errors?.['required']" class="text-danger small">Required</div></div>
-            <div class="col-md-6"><label class="form-label">Model *</label><input class="form-control" formControlName="model"></div>
-            <div class="col-md-6"><label class="form-label">Category *</label><select class="form-select" formControlName="category"><option *ngFor="let c of categories" [value]="c">{{c}}</option></select></div>
-            <div class="col-md-6"><label class="form-label">Color *</label><input class="form-control" formControlName="color"></div>
-            <div class="col-md-6"><label class="form-label">Condition *</label><select class="form-select" formControlName="carCondition"><option *ngFor="let c of conditions" [value]="c">{{c}}</option></select></div>
-            <div class="col-md-6"><label class="form-label">Insurance Number *</label><input class="form-control" formControlName="insuranceNumber"></div>
-            <div class="col-md-6"><label class="form-label">Mileage (km)</label><input type="number" class="form-control" formControlName="mileage"></div>
-            <div class="col-md-6"><label class="form-label">Rental Rate/Day (₹) *</label><input type="number" class="form-control" formControlName="rentalRatePerDay"></div>
+            <div class="col-md-6">
+              <label class="form-label">Registration Number *</label>
+              <input class="form-control" [class.is-invalid]="f['registrationNumber'].touched && f['registrationNumber'].errors" formControlName="registrationNumber" [readonly]="showEditModal" placeholder="e.g. MH01AB1234">
+              <div class="invalid-feedback">Registration number is required.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Model *</label>
+              <input class="form-control" [class.is-invalid]="f['model'].touched && f['model'].errors" formControlName="model" placeholder="e.g. Swift, Innova, Fortuner">
+              <div class="invalid-feedback">Model is required.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Category *</label>
+              <select class="form-select" [class.is-invalid]="f['category'].touched && f['category'].errors" formControlName="category">
+                <option value="" disabled>Select category</option>
+                <option *ngFor="let c of categories" [value]="c">{{c}}</option>
+              </select>
+              <div class="invalid-feedback">Category is required.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Color *</label>
+              <input class="form-control" [class.is-invalid]="f['color'].touched && f['color'].errors" formControlName="color" placeholder="e.g. White, Black, Silver">
+              <div class="invalid-feedback">Color is required.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Condition *</label>
+              <select class="form-select" [class.is-invalid]="f['carCondition'].touched && f['carCondition'].errors" formControlName="carCondition">
+                <option value="" disabled>Select condition</option>
+                <option *ngFor="let c of conditions" [value]="c">{{c}}</option>
+              </select>
+              <div class="invalid-feedback">Condition is required.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Insurance Number *</label>
+              <input class="form-control" [class.is-invalid]="f['insuranceNumber'].touched && f['insuranceNumber'].errors" formControlName="insuranceNumber" placeholder="e.g. INS-2024-001234">
+              <div class="invalid-feedback">Insurance number is required.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Mileage (km)</label>
+              <input type="number" class="form-control" [class.is-invalid]="f['mileage'].touched && f['mileage'].errors" formControlName="mileage" placeholder="e.g. 15000" min="0">
+              <div class="invalid-feedback">Mileage must be 0 or more.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Rental Rate/Day (₹) *</label>
+              <input type="number" class="form-control" [class.is-invalid]="f['rentalRatePerDay'].touched && f['rentalRatePerDay'].errors" formControlName="rentalRatePerDay" placeholder="e.g. 1500" min="1">
+              <div class="invalid-feedback">Rental rate is required and must be greater than 0.</div>
+            </div>
           </div>
         </form>
       </div>
@@ -106,7 +144,8 @@
       <div class="modal-body">
         <form [formGroup]="mileageForm">
           <label class="form-label">New Mileage (km) *</label>
-          <input type="number" class="form-control" formControlName="mileage">
+          <input type="number" class="form-control" [class.is-invalid]="mileageForm.get('mileage')?.touched && mileageForm.get('mileage')?.errors" formControlName="mileage" placeholder="e.g. 18500" min="0">
+          <div class="invalid-feedback">Valid mileage is required.</div>
         </form>
       </div>
       <div class="modal-footer">

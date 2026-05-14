@@ -29,11 +29,14 @@
       <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
         <div class="mb-3">
           <label class="cc-label">Current Password</label>
-          <input type="password" class="cc-input w-100" formControlName="currentPassword" />
+          <input type="password" class="cc-input w-100" formControlName="currentPassword" placeholder="Enter current password" />
+          <div *ngIf="passwordForm.get('currentPassword')?.touched && passwordForm.get('currentPassword')?.errors?.['required']" class="field-error">Current password is required</div>
         </div>
         <div class="mb-4">
           <label class="cc-label">New Password</label>
           <input type="password" class="cc-input w-100" formControlName="newPassword" placeholder="Min 6 characters" />
+          <div *ngIf="passwordForm.get('newPassword')?.touched && passwordForm.get('newPassword')?.errors?.['required']" class="field-error">New password is required</div>
+          <div *ngIf="passwordForm.get('newPassword')?.touched && passwordForm.get('newPassword')?.errors?.['minlength']" class="field-error">Password must be at least 6 characters</div>
         </div>
         <button type="submit" class="btn-cc-primary" [disabled]="loading || passwordForm.invalid">
           <span *ngIf="loading" class="cc-spinner me-2"></span>
@@ -57,6 +60,8 @@
         <div class="mb-4">
           <label class="cc-label">New Username</label>
           <input type="text" class="cc-input w-100" formControlName="newUsername" placeholder="Min 3 characters" />
+          <div *ngIf="usernameForm.get('newUsername')?.touched && usernameForm.get('newUsername')?.errors?.['required']" class="field-error">New username is required</div>
+          <div *ngIf="usernameForm.get('newUsername')?.touched && usernameForm.get('newUsername')?.errors?.['minlength']" class="field-error">Username must be at least 3 characters</div>
         </div>
         <button type="submit" class="btn-cc-primary" [disabled]="loading || usernameForm.invalid">
           Update Username
@@ -72,10 +77,12 @@
           <label class="cc-label">Security Question</label>
           <input type="text" class="cc-input w-100" formControlName="securityQuestion"
                  placeholder="e.g. What is your pet's name?" />
+          <div *ngIf="securityForm.get('securityQuestion')?.touched && securityForm.get('securityQuestion')?.errors?.['required']" class="field-error">Security question is required</div>
         </div>
         <div class="mb-4">
           <label class="cc-label">Answer</label>
-          <input type="text" class="cc-input w-100" formControlName="securityAnswer" placeholder="Your answer" />
+          <input type="text" class="cc-input w-100" formControlName="securityAnswer" placeholder="Your answer (case-insensitive)" />
+          <div *ngIf="securityForm.get('securityAnswer')?.touched && securityForm.get('securityAnswer')?.errors?.['required']" class="field-error">Answer is required</div>
         </div>
         <button type="submit" class="btn-cc-primary" [disabled]="loading || securityForm.invalid">
           Save Security Question

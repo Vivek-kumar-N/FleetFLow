@@ -338,7 +338,4 @@ export class EmployeeRentalsComponent implements OnInit {
   get f() { return this.bookingForm.controls; }
   get mf() { return this.modifyForm.controls; }
   get rf() { return this.returnForm.controls; }
-
-
-  //check1
 }
