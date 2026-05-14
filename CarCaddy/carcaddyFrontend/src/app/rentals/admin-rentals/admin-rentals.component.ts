@@ -299,6 +299,4 @@ export class AdminRentalsComponent implements OnInit {
   canModify(b: Booking): boolean { return b.bookingStatus === 'CONFIRMED'; }
 
   get f() { return this.bookingForm.controls; }
-
-  //check2
 }

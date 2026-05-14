@@ -63,12 +63,37 @@
       <div class="modal-body">
         <form [formGroup]="customerForm">
           <div class="row g-3">
-            <div class="col-md-6"><label class="form-label">Full Name *</label><input class="form-control" formControlName="customerName"><div *ngIf="f['customerName'].touched && f['customerName'].errors?.['required']" class="text-danger small">Required</div></div>
-            <div class="col-md-6"><label class="form-label">Email *</label><input type="email" class="form-control" formControlName="emailId"><div *ngIf="f['emailId'].touched && f['emailId'].errors?.['email']" class="text-danger small">Valid email required</div></div>
-            <div class="col-md-6"><label class="form-label">Contact Number *</label><input class="form-control" formControlName="contactNumber" placeholder="10-digit number"></div>
-            <div class="col-md-6"><label class="form-label">Driving License *</label><input class="form-control" formControlName="drivingLicense"></div>
-            <div class="col-md-6"><label class="form-label">Occupation</label><input class="form-control" formControlName="occupation"></div>
-            <div class="col-md-6"><label class="form-label">Address *</label><input class="form-control" formControlName="address"></div>
+            <div class="col-md-6">
+              <label class="form-label">Full Name *</label>
+              <input class="form-control" [class.is-invalid]="f['customerName'].touched && f['customerName'].errors" formControlName="customerName" placeholder="e.g. Rahul Sharma">
+              <div class="invalid-feedback">Full name is required (min 2 characters).</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email *</label>
+              <input type="email" class="form-control" [class.is-invalid]="f['emailId'].touched && f['emailId'].errors" formControlName="emailId" placeholder="e.g. rahul@example.com">
+              <div *ngIf="f['emailId'].touched && f['emailId'].errors?.['required']" class="invalid-feedback d-block">Email is required.</div>
+              <div *ngIf="f['emailId'].touched && f['emailId'].errors?.['email']" class="invalid-feedback d-block">Enter a valid email address.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Contact Number *</label>
+              <input class="form-control" [class.is-invalid]="f['contactNumber'].touched && f['contactNumber'].errors" formControlName="contactNumber" placeholder="10-digit mobile number">
+              <div *ngIf="f['contactNumber'].touched && f['contactNumber'].errors?.['required']" class="invalid-feedback d-block">Contact number is required.</div>
+              <div *ngIf="f['contactNumber'].touched && f['contactNumber'].errors?.['pattern']" class="invalid-feedback d-block">Enter a valid 10-digit number.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Driving License *</label>
+              <input class="form-control" [class.is-invalid]="f['drivingLicense'].touched && f['drivingLicense'].errors" formControlName="drivingLicense" placeholder="e.g. MH0120230012345">
+              <div class="invalid-feedback">Driving license is required (min 5 characters).</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Occupation</label>
+              <input class="form-control" formControlName="occupation" placeholder="e.g. Engineer, Doctor, Student">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Address *</label>
+              <input class="form-control" [class.is-invalid]="f['address'].touched && f['address'].errors" formControlName="address" placeholder="Full residential address">
+              <div class="invalid-feedback">Address is required (min 5 characters).</div>
+            </div>
           </div>
         </form>
       </div>

@@ -350,6 +350,4 @@ export class CustomerRentalsComponent implements OnInit {
 
   get bf() { return this.bookingForm.controls; }
   get mf() { return this.modifyForm.controls; }
-
-  //check3
 }
