@@ -137,45 +137,69 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Customer *</label>
-              <select class="form-select" formControlName="customerId" (change)="onCustomerChange()">
+              <select class="form-select" [class.is-invalid]="f['customerId'].touched && f['customerId'].errors" formControlName="customerId" (change)="onCustomerChange()">
                 <option value="">Select customer...</option>
                 <option *ngFor="let c of customers" [value]="c.customerId">
                   {{c.customerName}} ({{c.customerId}})
                 </option>
               </select>
-              <div *ngIf="f['customerId'].touched && f['customerId'].errors?.['required']" class="text-danger small">Required</div>
+              <div class="invalid-feedback">Customer selection is required.</div>
               <div *ngIf="customerDiscount > 0" class="text-success small mt-1">
                 <i class="bi bi-tag me-1"></i>{{customerDiscount}}% loyalty discount will be applied
               </div>
             </div>
             <div class="col-md-6">
               <label class="form-label">Car Model *</label>
-              <input class="form-control" formControlName="model" placeholder="e.g. Swift, Innova...">
-              <div *ngIf="f['model'].touched && f['model'].errors?.['required']" class="text-danger small">Required</div>
+              <input class="form-control" [class.is-invalid]="f['model'].touched && f['model'].errors" formControlName="model" placeholder="e.g. Swift, Innova, Fortuner" (blur)="checkAvailability()">
+              <div class="invalid-feedback">Car model is required.</div>
             </div>
             <div class="col-md-6">
               <label class="form-label">Category *</label>
-              <select class="form-select" formControlName="category">
+              <select class="form-select" [class.is-invalid]="f['category'].touched && f['category'].errors" formControlName="category">
+                <option value="" disabled>Select category</option>
                 <option *ngFor="let c of categories" [value]="c">{{c}}</option>
               </select>
+              <div class="invalid-feedback">Category is required.</div>
             </div>
             <div class="col-md-6">
               <label class="form-label">Passengers *</label>
-              <input type="number" class="form-control" formControlName="passengerCount" min="1" max="10">
+              <input type="number" class="form-control" [class.is-invalid]="f['passengerCount'].touched && f['passengerCount'].errors" formControlName="passengerCount" min="1" max="10" placeholder="Number of passengers (1–10)">
+              <div *ngIf="f['passengerCount'].touched && f['passengerCount'].errors?.['required']" class="invalid-feedback d-block">Passenger count is required.</div>
+              <div *ngIf="f['passengerCount'].touched && f['passengerCount'].errors?.['min']" class="invalid-feedback d-block">At least 1 passenger required.</div>
             </div>
             <div class="col-md-6">
               <label class="form-label">Start Date *</label>
-              <input type="date" class="form-control" formControlName="startDate">
-              <div *ngIf="f['startDate'].touched && f['startDate'].errors?.['required']" class="text-danger small">Required</div>
+              <input type="date" class="form-control"
+                     [class.is-invalid]="f['startDate'].touched && f['startDate'].errors"
+                     formControlName="startDate" [min]="today" (change)="checkAvailability()">
+              <div *ngIf="f['startDate'].touched && f['startDate'].errors?.['required']" class="invalid-feedback d-block">Start date is required.</div>
+              <div *ngIf="f['startDate'].touched && f['startDate'].errors?.['pastDate']" class="invalid-feedback d-block">Start date must be today or in the future.</div>
             </div>
             <div class="col-md-6">
               <label class="form-label">End Date *</label>
-              <input type="date" class="form-control" formControlName="endDate">
-              <div *ngIf="f['endDate'].touched && f['endDate'].errors?.['required']" class="text-danger small">Required</div>
+              <input type="date" class="form-control"
+                     [class.is-invalid]="(f['endDate'].touched && f['endDate'].errors) || (bookingForm.touched && bookingForm.hasError('endBeforeStart'))"
+                     formControlName="endDate" [min]="f['startDate'].value || today" (change)="checkAvailability()">
+              <div *ngIf="f['endDate'].touched && f['endDate'].errors?.['required']" class="invalid-feedback d-block">End date is required.</div>
+              <div *ngIf="bookingForm.hasError('endBeforeStart') && f['endDate'].touched" class="invalid-feedback d-block">End date must be after start date.</div>
+            </div>
+            <div class="col-12">
+              <button type="button" class="btn btn-outline-info btn-sm"
+                      (click)="checkAvailability()"
+                      [disabled]="checkingAvailability || !f['model'].value || !f['startDate'].value || !f['endDate'].value">
+                <span *ngIf="checkingAvailability" class="spinner-border spinner-border-sm me-1"></span>
+                <i *ngIf="!checkingAvailability" class="bi bi-search me-1"></i>
+                Check Availability
+              </button>
             </div>
           </div>
         </form>
-        <div *ngIf="estimatedFare > 0" class="alert alert-info mt-3 mb-0">
+        <div *ngIf="availabilityMsg" class="alert mt-3 mb-0"
+             [ngClass]="availabilityOk === true ? 'alert-success' : availabilityOk === false ? 'alert-warning' : 'alert-secondary'">
+          <i class="bi me-2" [ngClass]="availabilityOk === true ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+          {{availabilityMsg}}
+        </div>
+        <div *ngIf="estimatedFare > 0" class="alert alert-info mt-2 mb-0">
           <i class="bi bi-calculator me-1"></i>
           Estimated Fare: <strong>₹{{estimatedFare | number:'1.0-0'}}</strong>
           <span *ngIf="customerDiscount > 0"> (after {{customerDiscount}}% discount)</span>
@@ -202,27 +226,49 @@
         <button class="btn-close" (click)="closeModals()"></button>
       </div>
       <div class="modal-body">
+        <!-- Current booking info -->
+        <div class="p-2 mb-3 rounded" style="background:#f8f9fa; border:1px solid #dee2e6">
+          <small class="text-muted">Currently allocated car:</small>
+          <div class="fw-semibold">{{selectedBooking?.car?.model}} — <span class="text-primary">{{selectedBooking?.car?.registrationNumber}}</span></div>
+          <small class="text-muted">{{selectedBooking?.startDate | date:'dd MMM yyyy'}} → {{selectedBooking?.endDate | date:'dd MMM yyyy'}}</small>
+        </div>
         <form [formGroup]="modifyForm">
           <div class="mb-3">
             <label class="form-label">New Start Date</label>
-            <input type="date" class="form-control" formControlName="startDate">
+            <input type="date" class="form-control"
+                   [class.is-invalid]="modifyForm.get('startDate')?.touched && modifyForm.get('startDate')?.errors"
+                   formControlName="startDate" [min]="today"
+                   (change)="checkModifyAvailability()">
+            <div *ngIf="modifyForm.get('startDate')?.touched && modifyForm.get('startDate')?.errors?.['pastDate']" class="invalid-feedback d-block">Start date must be today or in the future.</div>
           </div>
           <div class="mb-3">
             <label class="form-label">New End Date</label>
-            <input type="date" class="form-control" formControlName="endDate">
+            <input type="date" class="form-control"
+                   [class.is-invalid]="modifyForm.hasError('endBeforeStart') && modifyForm.get('endDate')?.touched"
+                   formControlName="endDate"
+                   [min]="modifyForm.get('startDate')?.value || today"
+                   (change)="checkModifyAvailability()">
+            <div *ngIf="modifyForm.hasError('endBeforeStart') && modifyForm.get('endDate')?.touched" class="invalid-feedback d-block">End date must be after start date.</div>
           </div>
           <div class="mb-3">
             <label class="form-label">New Model (optional)</label>
-            <input class="form-control" formControlName="model" placeholder="Leave blank to keep current">
+            <input class="form-control" formControlName="model" placeholder="Leave blank to keep current model">
           </div>
           <div class="mb-3">
             <label class="form-label">New Category (optional)</label>
             <select class="form-select" formControlName="category">
-              <option value="">Keep current</option>
+              <option value="">Keep current category</option>
               <option *ngFor="let c of categories" [value]="c">{{c}}</option>
             </select>
           </div>
         </form>
+
+        <!-- Availability result for modify -->
+        <div *ngIf="modifyAvailabilityMsg" class="alert mt-2 mb-0"
+             [ngClass]="modifyAvailabilityOk === true ? 'alert-success' : modifyAvailabilityOk === false ? 'alert-warning' : 'alert-secondary'">
+          <i class="bi me-2" [ngClass]="modifyAvailabilityOk === true ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+          {{modifyAvailabilityMsg}}
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
@@ -255,7 +301,9 @@
         <form [formGroup]="returnForm">
           <div class="mb-3">
             <label class="form-label">Mileage at Return (km) *</label>
-            <input type="number" class="form-control" formControlName="mileageAtReturn">
+            <input type="number" class="form-control" [class.is-invalid]="returnForm.get('mileageAtReturn')?.touched && returnForm.get('mileageAtReturn')?.errors" formControlName="mileageAtReturn" placeholder="e.g. 18500" min="0">
+            <div *ngIf="returnForm.get('mileageAtReturn')?.touched && returnForm.get('mileageAtReturn')?.errors?.['required']" class="invalid-feedback d-block">Mileage at return is required.</div>
+            <div *ngIf="returnForm.get('mileageAtReturn')?.touched && returnForm.get('mileageAtReturn')?.errors?.['min']" class="invalid-feedback d-block">Mileage must be 0 or more.</div>
           </div>
           <div class="mb-3">
             <div class="form-check form-switch">
@@ -265,8 +313,7 @@
           </div>
           <div class="mb-3" *ngIf="returnForm.get('damaged')?.value">
             <label class="form-label">Damage Notes</label>
-            <textarea class="form-control" rows="3" formControlName="damageNotes"
-              placeholder="Describe the damage..."></textarea>
+            <textarea class="form-control" rows="3" formControlName="damageNotes" placeholder="Describe the damage in detail..."></textarea>
           </div>
         </form>
         <div class="alert alert-warning mb-0">
