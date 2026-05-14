@@ -132,4 +132,21 @@ public class ReportsController {
         Map<String, Object> report = reportsService.getFleetHealthReport();
         return ResponseEntity.ok(report);
     }
+
+    @GetMapping("/service-center-performance")
+    public ResponseEntity<List<Map<String, Object>>> getServiceCenterPerformance() {
+        logger.info("Generating service center performance report");
+        List<Map<String, Object>> report = reportsService.getServiceCenterPerformance();
+        return ResponseEntity.ok(report);
+    }
+
+    @GetMapping("/booking-trends")
+    public ResponseEntity<Map<String, Object>> getBookingTrends(
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        logger.info("Generating booking trends from {} to {}", startDate, endDate);
+        Map<String, Object> report = reportsService.getBookingTrends(
+                LocalDate.parse(startDate), LocalDate.parse(endDate));
+        return ResponseEntity.ok(report);
+    }
 }
