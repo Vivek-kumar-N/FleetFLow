@@ -42,14 +42,11 @@ export class CustomerSelfProfileComponent implements OnInit {
 
   ngOnInit(): void {
     const username = this.authService.getUsername();
-    this.customerService.getAllCustomers().subscribe({
-      next: (customers) => {
-        const found = customers.find(c => c.emailId === username || c.customerId === username);
-        if (found) {
-          this.customer = found;
-          this.profileForm.patchValue(found);
-          this.loadCustomerData(found.customerId!);
-        }
+    this.customerService.getCustomerByUsername(username).subscribe({
+      next: (customer) => {
+        this.customer = customer;
+        this.profileForm.patchValue(customer);
+        this.loadCustomerData(customer.customerId!);
         this.loading = false;
       },
       error: () => { this.loading = false; this.error = 'Failed to load profile.'; }
