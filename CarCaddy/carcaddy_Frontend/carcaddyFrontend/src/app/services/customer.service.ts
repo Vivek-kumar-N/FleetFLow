@@ -23,7 +23,7 @@ export class CustomerService {
   }
 
   getCustomerByUsername(username: string): Observable<Customer> {
-    return this.http.get<Customer>(`${this.base}/by-username/${username}`);
+    return this.http.get<Customer>(`${this.apiUrl}/by-username/${username}`);
   }
 
   getAllCustomers(): Observable<Customer[]> {
