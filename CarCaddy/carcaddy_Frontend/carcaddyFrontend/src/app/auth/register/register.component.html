@@ -10,29 +10,79 @@
     <div *ngIf="success" class="cc-alert cc-alert-success">{{ success }}</div>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <!-- Account Details -->
       <div class="mb-3">
-        <label class="cc-label">Username</label>
-        <input type="text" class="cc-input w-100" formControlName="username" placeholder="Enter username" />
-        <div *ngIf="f['username'].touched && f['username'].errors?.['required']" class="field-error">Username required</div>
+        <label class="cc-label">Username *</label>
+        <input type="text" class="cc-input w-100" formControlName="username" placeholder="Choose a username (min 3 chars)" />
+        <div *ngIf="f['username'].touched && f['username'].errors?.['required']" class="field-error">Username is required</div>
         <div *ngIf="f['username'].touched && f['username'].errors?.['minlength']" class="field-error">Min 3 characters</div>
       </div>
 
       <div class="mb-3">
-        <label class="cc-label">Password</label>
+        <label class="cc-label">Password *</label>
         <input type="password" class="cc-input w-100" formControlName="password" placeholder="Min 6 characters" />
-        <div *ngIf="f['password'].touched && f['password'].errors?.['required']" class="field-error">Password required</div>
+        <div *ngIf="f['password'].touched && f['password'].errors?.['required']" class="field-error">Password is required</div>
         <div *ngIf="f['password'].touched && f['password'].errors?.['minlength']" class="field-error">Min 6 characters</div>
       </div>
 
       <div class="mb-3">
-        <label class="cc-label">Role</label>
+        <label class="cc-label">Role *</label>
         <select class="cc-select w-100" formControlName="role">
+          <option value="ROLE_CUSTOMER">Customer</option>
           <option value="ROLE_ADMIN">Administrator</option>
           <option value="ROLE_EMPLOYEE">Employee</option>
-          <option value="ROLE_CUSTOMER">Customer</option>
         </select>
       </div>
 
+      <!-- Customer Profile Fields — shown only when role is ROLE_CUSTOMER -->
+      <div *ngIf="isCustomer">
+        <div class="cc-divider mb-3">
+          <span>Customer Profile Details</span>
+        </div>
+
+        <div class="mb-3">
+          <label class="cc-label">Full Name *</label>
+          <input type="text" class="cc-input w-100" formControlName="customerName" placeholder="e.g. Rahul Sharma" />
+          <div *ngIf="f['customerName'].touched && f['customerName'].errors?.['required']" class="field-error">Full name is required</div>
+          <div *ngIf="f['customerName'].touched && f['customerName'].errors?.['minlength']" class="field-error">Min 2 characters</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="cc-label">Email Address *</label>
+          <input type="email" class="cc-input w-100" formControlName="emailId" placeholder="e.g. rahul@example.com" />
+          <div *ngIf="f['emailId'].touched && f['emailId'].errors?.['required']" class="field-error">Email is required</div>
+          <div *ngIf="f['emailId'].touched && f['emailId'].errors?.['email']" class="field-error">Enter a valid email address</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="cc-label">Contact Number *</label>
+          <input type="text" class="cc-input w-100" formControlName="contactNumber" placeholder="10-digit mobile number" />
+          <div *ngIf="f['contactNumber'].touched && f['contactNumber'].errors?.['required']" class="field-error">Contact number is required</div>
+          <div *ngIf="f['contactNumber'].touched && f['contactNumber'].errors?.['pattern']" class="field-error">Enter a valid 10-digit number</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="cc-label">Driving License *</label>
+          <input type="text" class="cc-input w-100" formControlName="drivingLicense" placeholder="e.g. MH0120230012345" />
+          <div *ngIf="f['drivingLicense'].touched && f['drivingLicense'].errors?.['required']" class="field-error">Driving license is required</div>
+          <div *ngIf="f['drivingLicense'].touched && f['drivingLicense'].errors?.['minlength']" class="field-error">Min 5 characters</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="cc-label">Address *</label>
+          <input type="text" class="cc-input w-100" formControlName="address" placeholder="Full residential address" />
+          <div *ngIf="f['address'].touched && f['address'].errors?.['required']" class="field-error">Address is required</div>
+          <div *ngIf="f['address'].touched && f['address'].errors?.['minlength']" class="field-error">Min 5 characters</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="cc-label">Occupation (optional)</label>
+          <input type="text" class="cc-input w-100" formControlName="occupation" placeholder="e.g. Engineer, Doctor, Student" />
+        </div>
+      </div>
+
+      <!-- Security Question (optional) -->
       <div class="mb-3">
         <label class="cc-label">Security Question (optional)</label>
         <input type="text" class="cc-input w-100" formControlName="securityQuestion" placeholder="e.g. What is your pet's name?" />
