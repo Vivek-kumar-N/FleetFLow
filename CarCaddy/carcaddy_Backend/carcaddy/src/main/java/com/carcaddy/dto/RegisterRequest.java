@@ -13,4 +13,14 @@ public class RegisterRequest {
     private String role; // ROLE_ADMIN, ROLE_EMPLOYEE, ROLE_CUSTOMER
     private String securityQuestion;
     private String securityAnswer;
+
+    //for customer
+
+    private String customerName;
+    private String emailId;
+    private String contactNumber;
+    private String drivingLicense;
+    private String address;
+    private String occupation;
 }
+
