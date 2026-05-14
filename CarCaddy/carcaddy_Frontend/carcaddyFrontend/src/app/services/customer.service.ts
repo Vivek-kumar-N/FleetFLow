@@ -22,6 +22,10 @@ export class CustomerService {
     return this.http.patch<Customer>(`${this.apiUrl}/${id}/contact/${contact}`, null);
   }
 
+  getCustomerByUsername(username: string): Observable<Customer> {
+    return this.http.get<Customer>(`${this.base}/by-username/${username}`);
+  }
+
   getAllCustomers(): Observable<Customer[]> {
     return this.http.get<Customer[]>(this.apiUrl);
   }

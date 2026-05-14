@@ -145,6 +145,14 @@ public class CustomerController {
         return customers;
     }
 
+    // ---------------- GET CUSTOMER BY USERNAME (for logged-in customer) ----------------
+    @GetMapping("/by-username/{username}")
+    public ResponseEntity<Customer> getCustomerByUsername(@PathVariable String username) {
+        log.info("GET /api/customers/by-username/{} | Fetching customer by AppUser username", username);
+        Customer customer = service.getCustomerByUsername(username);
+        return ResponseEntity.ok(customer);
+    }
+
     // ---------------- DELETE CUSTOMER ----------------
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable String id) {
