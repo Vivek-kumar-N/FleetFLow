@@ -68,22 +68,7 @@ public class MaintenanceController {
         String statusStr = (String) body.get("status");
         MaintenanceStatus status = MaintenanceStatus.valueOf(statusStr);
 
-        // First update the status (handles car status change on COMPLETED)
-        service.updateStatus(id, status);
-
-        // Then patch all other fields provided in the request
-        MaintenanceDto patch = new MaintenanceDto();
-        patch.setStatus(status);
-        if (body.get("cost") != null)
-            patch.setCost(((Number) body.get("cost")).doubleValue());
-        if (body.get("performedBy") != null)
-            patch.setPerformedBy((String) body.get("performedBy"));
-        if (body.get("completedDate") != null && !((String) body.get("completedDate")).isBlank())
-            patch.setCompletedDate(java.time.LocalDate.parse((String) body.get("completedDate")));
-        if (body.get("description") != null)
-            patch.setDescription((String) body.get("description"));
-
-        return ResponseEntity.ok(service.patchDetails(id, patch));
+        return ResponseEntity.ok(service.updateStatus(id, status));
     }
 
     // Update Status via query param (backward compat)

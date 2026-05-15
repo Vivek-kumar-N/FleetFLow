@@ -16,8 +16,6 @@ public interface IMaintenanceService {
 
     MaintenanceDto updateStatus(Long id, MaintenanceStatus status);
 
-    MaintenanceDto patchDetails(Long id, MaintenanceDto dto);
-
     MaintenanceDto getById(Long id);
 
     List<MaintenanceDto> getAll();
