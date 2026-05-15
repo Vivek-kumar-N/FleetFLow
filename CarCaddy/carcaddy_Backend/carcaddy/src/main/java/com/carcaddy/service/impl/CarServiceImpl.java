@@ -161,16 +161,22 @@ public class CarServiceImpl implements ICarService {
     @Override
     public boolean needsMaintenance(Car car) {
 
+        // Rule 1: 5,000 km since last service
         boolean mileageExceeded =
                 car.getLastServiceMileage() != null &&
                 car.getMileage() != null &&
-                (car.getMileage() - car.getLastServiceMileage()) >= 10_000;
+                (car.getMileage() - car.getLastServiceMileage()) >= 5_000;
 
+        // Rule 2: 90 days (3 months) since last service
         boolean serviceOverdue =
                 car.getLastServiceDate() != null &&
-                ChronoUnit.MONTHS.between(
-                        car.getLastServiceDate(), LocalDate.now()) >= 6;
+                ChronoUnit.DAYS.between(car.getLastServiceDate(), LocalDate.now()) >= 90;
 
-        return mileageExceeded || serviceOverdue;
+        // Rule 3: 20 rentals since last service
+        boolean rentalCountExceeded =
+                car.getRentalCount() != null &&
+                car.getRentalCount() >= 20;
+
+        return mileageExceeded || serviceOverdue || rentalCountExceeded;
     }
 }
