@@ -28,7 +28,7 @@ public class Maintenance {
 
     private String description;
 
-    @Positive(message = "Cost must be positive")
+    @PositiveOrZero(message = "Cost must be zero or positive")
     private double cost;
 
     private String performedBy;
