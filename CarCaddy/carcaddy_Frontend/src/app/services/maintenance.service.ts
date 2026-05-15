@@ -73,6 +73,6 @@ export class MaintenanceService {
   }
 
   delete(id: number): Observable<string> {
-    return this.http.delete<string>(`${this.apiUrl}/${id}`);
+    return this.http.delete(`${this.apiUrl}/${id}`, { responseType: 'text' });
   }
 }

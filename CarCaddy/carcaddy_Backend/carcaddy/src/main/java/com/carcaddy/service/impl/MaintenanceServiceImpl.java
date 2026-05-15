@@ -3,6 +3,7 @@ package com.carcaddy.service.impl;
 import com.carcaddy.dto.MaintenanceDto;
 import com.carcaddy.entity.*;
 import com.carcaddy.exception.InvalidEntityException;
+import com.carcaddy.repository.BookingRepository;
 import com.carcaddy.repository.CarRepository;
 import com.carcaddy.repository.MaintenanceRepository;
 import com.carcaddy.service.IMaintenanceService;
@@ -19,11 +20,14 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
 
     private final MaintenanceRepository repo;
     private final CarRepository carRepository;
+    private final BookingRepository bookingRepository;
 
     public MaintenanceServiceImpl(MaintenanceRepository repo,
-                                  CarRepository carRepository) {
+                                  CarRepository carRepository,
+                                  BookingRepository bookingRepository) {
         this.repo = repo;
         this.carRepository = carRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     // PURE CONVERSION (NO BUSINESS LOGIC)
@@ -99,6 +103,39 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
         log.info("Adding maintenance for car: {}", dto.getRegistrationNumber());
 
         Car car = getCarOrThrow(dto.getRegistrationNumber());
+
+        // Rule 1: Scheduled date must not be in the past
+        if (dto.getScheduledDate() != null && dto.getScheduledDate().isBefore(LocalDate.now())) {
+            throw new InvalidEntityException(
+                "Scheduled date cannot be in the past. Please select today or a future date.");
+        }
+
+        // Rule 2: Car must not be currently booked on the scheduled date
+        if (dto.getScheduledDate() != null) {
+            List<Booking> overlapping = bookingRepository.findOverlappingBookings(
+                    dto.getRegistrationNumber(),
+                    dto.getScheduledDate(),
+                    dto.getScheduledDate()
+            );
+            boolean hasActiveBooking = overlapping.stream().anyMatch(b ->
+                    b.getBookingStatus() == BookingStatus.CONFIRMED ||
+                    b.getBookingStatus() == BookingStatus.ACTIVE ||
+                    b.getBookingStatus() == BookingStatus.MODIFIED
+            );
+            if (hasActiveBooking) {
+                // Find the booking end date to inform the user
+                Booking activeBooking = overlapping.stream()
+                        .filter(b -> b.getBookingStatus() == BookingStatus.CONFIRMED ||
+                                     b.getBookingStatus() == BookingStatus.ACTIVE ||
+                                     b.getBookingStatus() == BookingStatus.MODIFIED)
+                        .findFirst().orElse(null);
+                String returnDate = activeBooking != null
+                        ? activeBooking.getEndDate().toString() : "unknown";
+                throw new InvalidEntityException(
+                    "Car " + dto.getRegistrationNumber() + " is currently booked until " + returnDate +
+                    ". Maintenance can only be scheduled after the car is returned.");
+            }
+        }
 
         Maintenance m = convertToEntity(dto, car);
 
@@ -257,6 +294,24 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
 
         return repo.findByScheduledDateBetween(start, end)
                 .stream().map(this::convertToDTO).toList();
+    }
+
+    @Override
+    public MaintenanceDto patchDetails(Long id, MaintenanceDto dto) {
+
+        log.info("Patching details for maintenance ID {}", id);
+
+        Maintenance m = repo.findById(id)
+                .orElseThrow(() ->
+                        new InvalidEntityException("Maintenance ID " + id + " not found"));
+
+        if (dto.getCost() >= 0) m.setCost(dto.getCost());
+        if (dto.getPerformedBy() != null) m.setPerformedBy(dto.getPerformedBy());
+        if (dto.getCompletedDate() != null) m.setCompletedDate(dto.getCompletedDate());
+        if (dto.getDescription() != null) m.setDescription(dto.getDescription());
+        if (dto.getStatus() != null) m.setStatus(dto.getStatus());
+
+        return convertToDTO(repo.save(m));
     }
 
     @Override
