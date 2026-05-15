@@ -80,7 +80,7 @@ export class CustomerRentalsComponent implements OnInit {
       category:       ['Sedan', Validators.required],
       startDate:      ['', [Validators.required, presentOrFutureDate()]],
       endDate:        ['', Validators.required],
-      passengerCount: [1, [Validators.required, Validators.min(1), Validators.max(5)]]
+      passengerCount: [1, [Validators.required, Validators.min(1), Validators.max(10)]]
     }, { validators: endAfterStart() });
 
     this.modifyForm = this.fb.group({

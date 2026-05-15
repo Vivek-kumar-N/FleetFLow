@@ -1,6 +1,7 @@
 package com.carcaddy.service.impl;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,9 @@ public class BookingServiceImpl implements IBookingService {
 
     @Autowired
     private CarRepository carRepository;
+
+    @Autowired
+    private MaintenanceRepository maintenanceRepository;
 
     // ✅ 1. CREATE BOOKING
     @Override
@@ -270,9 +274,40 @@ public class BookingServiceImpl implements IBookingService {
 
         car.setMileage(request.getMileageAtReturn());
 
-        if (request.isDamaged() || car.getMileage() >= 5000) {
-            log.info("Car moved to MAINTENANCE");
+        boolean needsMaintenance = false;
+        String maintenanceReason = "";
+
+        if (request.isDamaged()) {
+            needsMaintenance = true;
+            maintenanceReason = request.getDamageNotes() != null && !request.getDamageNotes().isBlank()
+                    ? request.getDamageNotes()
+                    : "Car returned with damage reported";
+        }
+
+        // Check mileage-based maintenance rule (5,000 km since last service)
+        if (!needsMaintenance && car.getLastServiceMileage() != null
+                && (car.getMileage() - car.getLastServiceMileage()) >= 5_000) {
+            needsMaintenance = true;
+            maintenanceReason = "Mileage threshold exceeded — service required";
+        }
+
+        if (needsMaintenance) {
+            log.info("Car {} moved to MAINTENANCE. Reason: {}", car.getRegistrationNumber(), maintenanceReason);
             car.setStatus(CarStatus.MAINTENANCE);
+
+            // Auto-create a maintenance record so it appears in the maintenance list
+            Maintenance maintenanceRecord = new Maintenance();
+            maintenanceRecord.setCar(car);
+            maintenanceRecord.setMaintenanceType(request.isDamaged()
+                    ? MaintenanceType.EMERGENCY : MaintenanceType.REPAIR);
+            maintenanceRecord.setStatus(MaintenanceStatus.IN_PROGRESS);
+            maintenanceRecord.setScheduledDate(LocalDate.now());
+            maintenanceRecord.setDescription(maintenanceReason);
+            maintenanceRecord.setCost(0);
+            maintenanceRecord.setCreatedAt(LocalDateTime.now());
+            maintenanceRepository.save(maintenanceRecord);
+
+            log.info("Maintenance record auto-created for car {}", car.getRegistrationNumber());
         } else {
             car.setStatus(CarStatus.AVAILABLE);
         }
