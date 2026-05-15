@@ -42,6 +42,10 @@ export class CustomerService {
     return this.http.patch<Customer>(`${this.apiUrl}/${id}/blacklist`, null);
   }
 
+  unblacklistCustomer(id: string): Observable<Customer> {
+    return this.http.patch<Customer>(`${this.apiUrl}/${id}/unblacklist`, null);
+  }
+
   getLoyaltyPoints(id: string): Observable<number> {
     return this.http.get<number>(`${this.apiUrl}/${id}/loyalty-points`);
   }
