@@ -98,6 +98,14 @@ export class AdminCustomersComponent implements OnInit {
     });
   }
 
+  unblacklistCustomer(c: Customer): void {
+    if (!confirm(`Remove blacklist restriction for ${c.customerName}?`)) return;
+    this.customerService.unblacklistCustomer(c.customerId!).subscribe({
+      next: () => { this.success = `${c.customerName} has been unblacklisted.`; this.loadCustomers(); },
+      error: (err: any) => { this.error = AuthService.parseError(err); }
+    });
+  }
+
   deleteCustomer(): void {
     if (!this.selectedCustomer) return;
     this.submitting = true;

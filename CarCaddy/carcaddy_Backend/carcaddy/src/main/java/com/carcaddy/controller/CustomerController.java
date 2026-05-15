@@ -1,3 +1,4 @@
+
 package com.carcaddy.controller;
 
 import com.carcaddy.dto.CustomerDTO;
@@ -97,6 +98,17 @@ public class CustomerController {
 
         Customer customer = service.blacklistCustomer(id);
         log.info("Customer blacklisted successfully | customerId={}", customer.getCustomerId());
+
+        return customer;
+    }
+
+    // ---------------- UNBLACKLIST CUSTOMER ----------------
+    @PatchMapping("/{id}/unblacklist")
+    public Customer unblacklistCustomer(@PathVariable String id) {
+        log.info("PATCH /api/customers/{}/unblacklist | Removing blacklist", id);
+
+        Customer customer = service.unblacklistCustomer(id);
+        log.info("Customer unblacklisted successfully | customerId={}", customer.getCustomerId());
 
         return customer;
     }

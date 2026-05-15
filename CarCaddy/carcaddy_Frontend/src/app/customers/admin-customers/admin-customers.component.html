@@ -45,6 +45,7 @@
               <button class="btn btn-xs btn-outline-primary me-1" title="Edit" (click)="openEditModal(c)"><i class="bi bi-pencil"></i></button>
               <button class="btn btn-xs btn-outline-info me-1" title="Booking History" (click)="openHistoryModal(c)"><i class="bi bi-clock-history"></i></button>
               <button class="btn btn-xs btn-outline-danger me-1" title="Blacklist" (click)="openBlacklistModal(c)" [disabled]="c.blacklisted!"><i class="bi bi-slash-circle"></i></button>
+              <button class="btn btn-xs btn-outline-success me-1" title="Remove Blacklist" (click)="unblacklistCustomer(c)" *ngIf="c.blacklisted"><i class="bi bi-check-circle"></i></button>
               <button class="btn btn-xs btn-outline-secondary" title="Delete" (click)="openDeleteModal(c)"><i class="bi bi-trash"></i></button>
             </td>
           </tr>
