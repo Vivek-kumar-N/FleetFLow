@@ -150,9 +150,9 @@ export class AdminRentalsComponent implements OnInit {
           this.checkingAvailability = false;
           return;
         }
-        const availableCars = cars.filter(c => c.status === 'AVAILABLE');
+        const availableCars = cars.filter(c => c.status !== 'MAINTENANCE');
         if (availableCars.length === 0) {
-          this.availabilityMsg = `All "${model}" cars are currently rented or in maintenance.`;
+          this.availabilityMsg = `All "${model}" cars are currently in maintenance.`;
           this.availabilityOk = false;
           this.checkingAvailability = false;
           return;
