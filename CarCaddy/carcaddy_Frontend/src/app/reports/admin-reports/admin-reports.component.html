@@ -4,12 +4,8 @@
   <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Reports & Analytics</h5>
     <div class="d-flex gap-2">
-      <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV(activeTab)">
-        <i class="bi bi-download me-1"></i>Export CSV
-      </button>
-      <button class="btn btn-outline-secondary btn-sm" (click)="print()">
-        <i class="bi bi-printer me-1"></i>Print
-      </button>
+      <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV(activeTab)"><i class="bi bi-download me-1"></i>Export CSV</button>
+      <button class="btn btn-outline-secondary btn-sm" (click)="print()"><i class="bi bi-printer me-1"></i>Print</button>
     </div>
   </div>
 
@@ -17,47 +13,33 @@
   <div class="card mb-3">
     <div class="card-body py-2">
       <div class="row g-2 align-items-end">
-        <div class="col-md-3">
-          <label class="form-label small mb-1">Start Date</label>
-          <input type="date" class="form-control form-control-sm" [(ngModel)]="startDate">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label small mb-1">End Date</label>
-          <input type="date" class="form-control form-control-sm" [(ngModel)]="endDate">
-        </div>
-        <div class="col-md-2">
-          <button class="btn btn-primary btn-sm w-100" (click)="loadAll()">
-            <i class="bi bi-arrow-clockwise me-1"></i>Apply
-          </button>
-        </div>
-        <div class="col-md-2">
-          <button class="btn btn-outline-secondary btn-sm w-100" (click)="ngOnInit()">Reset</button>
-        </div>
+        <div class="col-md-3"><label class="form-label small mb-1">Start Date</label><input type="date" class="form-control form-control-sm" [(ngModel)]="startDate"></div>
+        <div class="col-md-3"><label class="form-label small mb-1">End Date</label><input type="date" class="form-control form-control-sm" [(ngModel)]="endDate"></div>
+        <div class="col-md-2"><button class="btn btn-primary btn-sm w-100" (click)="loadAll()"><i class="bi bi-arrow-clockwise me-1"></i>Apply</button></div>
+        <div class="col-md-2"><button class="btn btn-outline-secondary btn-sm w-100" (click)="resetDates()">Reset</button></div>
       </div>
     </div>
   </div>
 
   <!-- Tabs -->
   <ul class="nav nav-tabs mb-3 flex-wrap">
-    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='revenue'}"     (click)="activeTab='revenue'"     href="javascript:void(0)"><i class="bi bi-currency-rupee me-1"></i>Revenue</a></li>
-    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='trends'}"      (click)="activeTab='trends'"      href="javascript:void(0)"><i class="bi bi-graph-up me-1"></i>Booking Trends</a></li>
-    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='fleet'}"       (click)="activeTab='fleet'"       href="javascript:void(0)"><i class="bi bi-car-front me-1"></i>Fleet</a></li>
-    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='customers'}"   (click)="activeTab='customers'"   href="javascript:void(0)"><i class="bi bi-people me-1"></i>Customers</a></li>
-    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='maintenance'}" (click)="activeTab='maintenance'" href="javascript:void(0)"><i class="bi bi-tools me-1"></i>Maintenance</a></li>
-    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='service'}"     (click)="activeTab='service'"     href="javascript:void(0)"><i class="bi bi-person-gear me-1"></i>Service Center</a></li>
-    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='profitability'}" (click)="activeTab='profitability'" href="javascript:void(0)"><i class="bi bi-graph-up-arrow me-1"></i>Profitability</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='revenue'}"       (click)="switchTab('revenue')"       href="javascript:void(0)"><i class="bi bi-currency-rupee me-1"></i>Revenue</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='trends'}"        (click)="switchTab('trends')"        href="javascript:void(0)"><i class="bi bi-graph-up me-1"></i>Booking Trends</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='fleet'}"         (click)="switchTab('fleet')"         href="javascript:void(0)"><i class="bi bi-car-front me-1"></i>Fleet</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='customers'}"     (click)="switchTab('customers')"     href="javascript:void(0)"><i class="bi bi-people me-1"></i>Customers</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='maintenance'}"   (click)="switchTab('maintenance')"   href="javascript:void(0)"><i class="bi bi-tools me-1"></i>Maintenance</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='service'}"       (click)="switchTab('service')"       href="javascript:void(0)"><i class="bi bi-person-gear me-1"></i>Service Center</a></li>
+    <li class="nav-item"><a class="nav-link" [ngClass]="{active: activeTab==='profitability'}" (click)="switchTab('profitability')" href="javascript:void(0)"><i class="bi bi-graph-up-arrow me-1"></i>Profitability</a></li>
   </ul>
 
   <div *ngIf="loading" class="text-center py-4"><div class="spinner-border text-primary"></div></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <!-- REVENUE TAB -->
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div *ngIf="!loading && activeTab === 'revenue'">
     <div class="row g-3">
       <div class="col-md-4">
         <div class="card text-center p-4">
-          <div class="report-value text-success">₹{{revenue | number:'1.0-0'}}</div>
+          <div class="report-value text-success" style="font-size:2rem;font-weight:700">₹{{revenue | number:'1.0-0'}}</div>
           <div class="text-muted mt-1">Total Revenue</div>
           <small class="text-muted">{{startDate | date:'dd MMM yyyy'}} – {{endDate | date:'dd MMM yyyy'}}</small>
         </div>
@@ -70,13 +52,8 @@
           </div>
           <div class="card-body">
             <div *ngFor="let e of incomeEntries" class="mb-2">
-              <div class="d-flex justify-content-between mb-1">
-                <span class="small">{{e[0]}}</span>
-                <span class="small fw-bold text-success">₹{{e[1] | number:'1.0-0'}}</span>
-              </div>
-              <div class="progress" style="height:8px">
-                <div class="progress-bar bg-success" [style.width.%]="getPercent(e[1], incomeEntries)"></div>
-              </div>
+              <div class="d-flex justify-content-between mb-1"><span class="small">{{e[0]}}</span><span class="small fw-bold text-success">₹{{e[1] | number:'1.0-0'}}</span></div>
+              <div class="progress" style="height:10px"><div class="progress-bar bg-success" [style.width.%]="getPercent(e[1], incomeEntries)"></div></div>
             </div>
             <p *ngIf="incomeEntries.length === 0" class="text-muted text-center">No revenue data for this period</p>
           </div>
@@ -85,85 +62,39 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <!-- BOOKING TRENDS TAB -->
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- BOOKING TRENDS TAB — Chart.js Bar + Line charts -->
   <div *ngIf="!loading && activeTab === 'trends'">
     <div class="row g-3">
-      <!-- Bookings per month bar chart -->
-      <div class="col-md-6">
+      <div class="col-12">
         <div class="card">
-          <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-calendar3 me-2 text-primary"></i>Bookings per Month</span>
-            <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV('trends')"><i class="bi bi-download me-1"></i>CSV</button>
+          <div class="card-header fw-bold d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span><i class="bi bi-graph-up me-2 text-primary"></i>Booking Volume Trends</span>
+            <div class="d-flex gap-2">
+              <div class="btn-group btn-group-sm">
+                <button class="btn" [ngClass]="trendsGranularity==='monthly' ? 'btn-primary' : 'btn-outline-primary'" (click)="trendsGranularity='monthly'">Monthly</button>
+                <button class="btn" [ngClass]="trendsGranularity==='weekly' ? 'btn-primary' : 'btn-outline-primary'" (click)="trendsGranularity='weekly'">Weekly</button>
+                <button class="btn" [ngClass]="trendsGranularity==='daily' ? 'btn-primary' : 'btn-outline-primary'" (click)="trendsGranularity='daily'">Daily</button>
+              </div>
+              <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV('trends')"><i class="bi bi-download me-1"></i>CSV</button>
+            </div>
           </div>
           <div class="card-body">
-            <div *ngFor="let e of bookingsByMonthEntries" class="mb-3">
-              <div class="d-flex justify-content-between mb-1">
-                <span class="small fw-semibold">{{e[0]}}</span>
-                <span class="badge bg-primary">{{e[1]}} bookings</span>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <h6 class="text-muted small mb-2">Bookings per Month — Bar Chart</h6>
+                <canvas #bookingTrendsChart style="max-height:300px"></canvas>
+                <p *ngIf="bookingsByMonthEntries.length === 0" class="text-muted text-center py-3">No booking data for this period</p>
               </div>
-              <div class="progress" style="height:14px; border-radius:4px">
-                <div class="progress-bar bg-primary"
-                     [style.width.%]="getPercent(e[1], bookingsByMonthEntries)"
-                     style="border-radius:4px">
-                </div>
+              <div class="col-md-6">
+                <h6 class="text-muted small mb-2">Revenue Trend — Line Chart</h6>
+                <canvas #revenueTrendsChart style="max-height:300px"></canvas>
+                <p *ngIf="revenueByMonthEntries.length === 0" class="text-muted text-center py-3">No revenue data for this period</p>
               </div>
             </div>
-            <p *ngIf="bookingsByMonthEntries.length === 0" class="text-muted text-center py-3">
-              <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>No booking data for this period
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Revenue per month bar chart -->
-      <div class="col-md-6">
-        <div class="card">
-          <div class="card-header fw-bold">
-            <i class="bi bi-currency-rupee me-2 text-success"></i>Revenue per Month
-          </div>
-          <div class="card-body">
-            <div *ngFor="let e of revenueByMonthEntries" class="mb-3">
-              <div class="d-flex justify-content-between mb-1">
-                <span class="small fw-semibold">{{e[0]}}</span>
-                <span class="small fw-bold text-success">₹{{e[1] | number:'1.0-0'}}</span>
-              </div>
-              <div class="progress" style="height:14px; border-radius:4px">
-                <div class="progress-bar bg-success"
-                     [style.width.%]="getPercent(e[1], revenueByMonthEntries)"
-                     style="border-radius:4px">
-                </div>
-              </div>
-            </div>
-            <p *ngIf="revenueByMonthEntries.length === 0" class="text-muted text-center py-3">
-              <i class="bi bi-graph-up fs-2 d-block mb-2"></i>No revenue data for this period
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Summary stats -->
-      <div class="col-12" *ngIf="bookingsByMonthEntries.length > 0">
-        <div class="card">
-          <div class="card-body">
-            <div class="row text-center g-3">
-              <div class="col-md-4">
-                <div class="fw-bold fs-4 text-primary">{{bookingsByMonthEntries.length}}</div>
-                <div class="text-muted small">Months Tracked</div>
-              </div>
-              <div class="col-md-4">
-                <div class="fw-bold fs-4 text-success">
-                  {{bookingsByMonthEntries.length > 0 ? (bookingsByMonthEntries | slice:0:1)[0][1] : 0}}
-                </div>
-                <div class="text-muted small">First Month Bookings</div>
-              </div>
-              <div class="col-md-4">
-                <div class="fw-bold fs-4 text-warning">
-                  {{bookingsByMonthEntries.length > 0 ? (bookingsByMonthEntries | slice:-1)[0][1] : 0}}
-                </div>
-                <div class="text-muted small">Latest Month Bookings</div>
-              </div>
+            <div class="row text-center g-3 mt-2 border-top pt-3" *ngIf="bookingsByMonthEntries.length > 0">
+              <div class="col-4"><div class="fw-bold fs-5 text-primary">{{bookingsByMonthEntries.length}}</div><div class="text-muted small">Months Tracked</div></div>
+              <div class="col-4"><div class="fw-bold fs-5 text-success">{{bookingsByMonthEntries.length > 0 ? (bookingsByMonthEntries | slice:0:1)[0][1] : 0}}</div><div class="text-muted small">First Month</div></div>
+              <div class="col-4"><div class="fw-bold fs-5 text-warning">{{bookingsByMonthEntries.length > 0 ? (bookingsByMonthEntries | slice:-1)[0][1] : 0}}</div><div class="text-muted small">Latest Month</div></div>
             </div>
           </div>
         </div>
@@ -171,57 +102,43 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <!-- FLEET TAB -->
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- FLEET TAB — Chart.js Doughnut/Pie chart -->
   <div *ngIf="!loading && activeTab === 'fleet'">
     <div class="row g-3">
       <div class="col-md-4">
         <div class="card">
-          <div class="card-header fw-bold">Fleet Health</div>
-          <div class="card-body">
-            <div class="d-flex justify-content-between mb-2"><span>Available</span><span class="badge bg-success">{{fleetHealth?.availableCars || 0}}</span></div>
-            <div class="d-flex justify-content-between mb-2"><span>Rented</span><span class="badge bg-warning text-dark">{{fleetHealth?.rentedCars || 0}}</span></div>
-            <div class="d-flex justify-content-between mb-2"><span>In Maintenance</span><span class="badge bg-danger">{{fleetHealth?.maintenanceCars || 0}}</span></div>
-            <div class="d-flex justify-content-between mb-2"><span>Due for Service</span><span class="badge bg-secondary">{{fleetHealth?.carsDueForService || 0}}</span></div>
-            <div class="d-flex justify-content-between mb-2"><span>Avg Mileage</span><span class="fw-bold">{{fleetHealth?.averageMileage || 0 | number:'1.0-0'}} km</span></div>
-            <div class="progress mt-3" style="height:12px">
-              <div class="progress-bar bg-success" [style.width.%]="fleetHealth?.fleetUtilization || 0"></div>
+          <div class="card-header fw-bold"><i class="bi bi-pie-chart-fill me-2 text-info"></i>Fleet Status Distribution</div>
+          <div class="card-body text-center">
+            <canvas #fleetPieChart style="max-height:280px"></canvas>
+            <div class="mt-3 text-muted small">
+              <div class="d-flex justify-content-between"><span>Fleet Utilization</span><strong>{{fleetHealth?.fleetUtilization || 0 | number:'1.0-1'}}%</strong></div>
+              <div class="progress mt-1" style="height:8px"><div class="progress-bar bg-info" [style.width.%]="fleetHealth?.fleetUtilization || 0"></div></div>
+              <div class="d-flex justify-content-between mt-2"><span>Due for Service</span><strong class="text-warning">{{fleetHealth?.carsDueForService || 0}}</strong></div>
+              <div class="d-flex justify-content-between"><span>Avg Mileage</span><strong>{{fleetHealth?.averageMileage || 0 | number:'1.0-0'}} km</strong></div>
             </div>
-            <small class="text-muted">{{fleetHealth?.fleetUtilization || 0 | number:'1.0-1'}}% fleet utilization</small>
           </div>
         </div>
       </div>
       <div class="col-md-8">
         <div class="card">
           <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-            Car Utilization (Completed Rentals)
+            Car Utilization — Occupancy Rate
             <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV('fleet')"><i class="bi bi-download me-1"></i>CSV</button>
           </div>
           <div class="card-body">
             <div *ngFor="let e of utilizationEntries" class="mb-2">
-              <div class="d-flex justify-content-between mb-1">
-                <span class="small">{{e[0]}}</span>
-                <span class="small fw-bold">{{e[1]}} rentals</span>
-              </div>
-              <div class="progress" style="height:8px">
-                <div class="progress-bar bg-info" [style.width.%]="getPercent(e[1], utilizationEntries)"></div>
-              </div>
+              <div class="d-flex justify-content-between mb-1"><span class="small">{{e[0]}}</span><span class="small fw-bold">{{e[1]}} rentals</span></div>
+              <div class="progress" style="height:10px"><div class="progress-bar bg-info" [style.width.%]="getPercent(e[1], utilizationEntries)"></div></div>
             </div>
             <p *ngIf="utilizationEntries.length === 0" class="text-muted text-center">No data</p>
           </div>
         </div>
-      </div>
-      <div class="col-12">
-        <div class="card">
+        <div class="card mt-3">
           <div class="card-header fw-bold">Cars with Minimal Bookings</div>
           <div class="card-body">
             <div class="row g-2">
               <div *ngFor="let e of minimalEntries" class="col-md-3 col-sm-4 col-6">
-                <div class="p-2 bg-light rounded text-center border">
-                  <div class="fw-bold small">{{e[0]}}</div>
-                  <span class="badge bg-warning text-dark">{{e[1]}} bookings</span>
-                </div>
+                <div class="p-2 bg-light rounded text-center border"><div class="fw-bold small">{{e[0]}}</div><span class="badge bg-warning text-dark">{{e[1]}} bookings</span></div>
               </div>
               <div *ngIf="minimalEntries.length === 0" class="col-12 text-center text-muted">No data</div>
             </div>
@@ -231,9 +148,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <!-- CUSTOMERS TAB -->
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div *ngIf="!loading && activeTab === 'customers'">
     <div class="row g-3">
       <div class="col-md-6">
@@ -247,8 +162,7 @@
               <thead class="table-light"><tr><th>#</th><th>Customer</th><th>Email</th><th>Loyalty Pts</th></tr></thead>
               <tbody>
                 <tr *ngFor="let c of topCustomers; let i = index">
-                  <td><span class="badge bg-primary">{{i+1}}</span></td>
-                  <td>{{c.customerName}}</td>
+                  <td><span class="badge bg-primary">{{i+1}}</span></td><td>{{c.customerName}}</td>
                   <td class="text-muted small">{{c.emailId}}</td>
                   <td><span class="badge bg-warning text-dark">{{c.loyaltyPoints || 0}}</span></td>
                 </tr>
@@ -273,28 +187,18 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <!-- MAINTENANCE TAB -->
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- MAINTENANCE TAB — Chart.js Grouped Bar Chart -->
   <div *ngIf="!loading && activeTab === 'maintenance'">
     <div class="row g-3">
-      <div class="col-md-6">
+      <div class="col-12">
         <div class="card">
           <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-            Maintenance Cost by Car Model
+            <span><i class="bi bi-bar-chart-steps me-2 text-warning"></i>Maintenance Cost vs Rental Income — Grouped Bar Chart</span>
             <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV('maintenance')"><i class="bi bi-download me-1"></i>CSV</button>
           </div>
           <div class="card-body">
-            <div *ngFor="let e of maintenanceCostModelEntries" class="mb-2">
-              <div class="d-flex justify-content-between mb-1">
-                <span class="small">{{e[0]}}</span>
-                <span class="small fw-bold text-danger">₹{{e[1] | number:'1.0-0'}}</span>
-              </div>
-              <div class="progress" style="height:8px">
-                <div class="progress-bar bg-danger" [style.width.%]="getPercent(e[1], maintenanceCostModelEntries)"></div>
-              </div>
-            </div>
-            <p *ngIf="maintenanceCostModelEntries.length === 0" class="text-muted text-center">No data</p>
+            <canvas #maintenanceVsIncomeChart style="max-height:350px"></canvas>
+            <p *ngIf="maintenanceVsIncomeEntries.length === 0" class="text-muted text-center mt-3">No data available</p>
           </div>
         </div>
       </div>
@@ -303,13 +207,8 @@
           <div class="card-header fw-bold">Maintenance Cost by Period</div>
           <div class="card-body">
             <div *ngFor="let e of maintenanceCostPeriodEntries" class="mb-2">
-              <div class="d-flex justify-content-between mb-1">
-                <span class="small">{{e[0]}}</span>
-                <span class="small fw-bold text-danger">₹{{e[1] | number:'1.0-0'}}</span>
-              </div>
-              <div class="progress" style="height:8px">
-                <div class="progress-bar bg-warning" [style.width.%]="getPercent(e[1], maintenanceCostPeriodEntries)"></div>
-              </div>
+              <div class="d-flex justify-content-between mb-1"><span class="small">{{e[0]}}</span><span class="small fw-bold text-danger">₹{{e[1] | number:'1.0-0'}}</span></div>
+              <div class="progress" style="height:8px"><div class="progress-bar bg-warning" [style.width.%]="getPercent(e[1], maintenanceCostPeriodEntries)"></div></div>
             </div>
             <p *ngIf="maintenanceCostPeriodEntries.length === 0" class="text-muted text-center">No data for this period</p>
           </div>
@@ -318,9 +217,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <!-- SERVICE CENTER PERFORMANCE TAB (NEW) -->
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SERVICE CENTER TAB -->
   <div *ngIf="!loading && activeTab === 'service'">
     <div class="card">
       <div class="card-header fw-bold d-flex justify-content-between align-items-center">
@@ -329,69 +226,78 @@
       </div>
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
-          <thead class="table-dark">
-            <tr>
-              <th>Performer / Service Center</th>
-              <th>Jobs Completed</th>
-              <th>Total Cost Managed</th>
-              <th>Avg Completion Time</th>
-              <th>Performance</th>
-            </tr>
-          </thead>
+          <thead class="table-dark"><tr><th>Performer</th><th>Jobs Completed</th><th>Total Cost Managed</th><th>Avg Completion Time</th><th>Performance</th></tr></thead>
           <tbody>
             <tr *ngFor="let p of serviceCenterPerformance; let i = index">
-              <td class="fw-semibold">
-                <i class="bi bi-person-fill me-2 text-info"></i>{{p.performer}}
-              </td>
-              <td>
-                <span class="badge bg-success fs-6">{{p.jobsCompleted || 0}}</span>
-              </td>
+              <td class="fw-semibold"><i class="bi bi-person-fill me-2 text-info"></i>{{p.performer}}</td>
+              <td><span class="badge bg-success fs-6">{{p.jobsCompleted || 0}}</span></td>
               <td class="text-danger fw-bold">₹{{p.totalCost | number:'1.0-0'}}</td>
-              <td>
-                <span *ngIf="p.avgCompletionDays != null">{{p.avgCompletionDays | number:'1.0-1'}} days</span>
-                <span *ngIf="p.avgCompletionDays == null" class="text-muted">N/A</span>
-              </td>
+              <td><span *ngIf="p.avgCompletionDays != null">{{p.avgCompletionDays | number:'1.0-1'}} days</span><span *ngIf="p.avgCompletionDays == null" class="text-muted">N/A</span></td>
               <td>
                 <div class="progress" style="height:8px; min-width:80px">
-                  <div class="progress-bar"
-                       [ngClass]="i === 0 ? 'bg-success' : i === 1 ? 'bg-info' : 'bg-secondary'"
-                       [style.width.%]="serviceCenterPerformance.length > 0 ? ((p.jobsCompleted || 0) / (serviceCenterPerformance[0].jobsCompleted || 1)) * 100 : 0">
-                  </div>
+                  <div class="progress-bar" [ngClass]="i === 0 ? 'bg-success' : i === 1 ? 'bg-info' : 'bg-secondary'"
+                       [style.width.%]="serviceCenterPerformance.length > 0 ? ((p.jobsCompleted || 0) / (serviceCenterPerformance[0].jobsCompleted || 1)) * 100 : 0"></div>
                 </div>
               </td>
             </tr>
-            <tr *ngIf="serviceCenterPerformance.length === 0">
-              <td colspan="5" class="text-center text-muted py-4">
-                <i class="bi bi-person-gear fs-2 d-block mb-2"></i>No service records found
-              </td>
-            </tr>
+            <tr *ngIf="serviceCenterPerformance.length === 0"><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-person-gear fs-2 d-block mb-2"></i>No service records found</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
-  <!-- PROFITABILITY TAB -->
-  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- PROFITABILITY TAB — Chart.js Horizontal Bar + Tables -->
   <div *ngIf="!loading && activeTab === 'profitability'">
-    <div class="card">
-      <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-        Most & Least Profitable Cars (Revenue − Maintenance Cost)
-        <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV('profitability')"><i class="bi bi-download me-1"></i>CSV</button>
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+            Most & Least Profitable Cars — Net Profit/Loss Chart
+            <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV('profitability')"><i class="bi bi-download me-1"></i>CSV</button>
+          </div>
+          <div class="card-body">
+            <canvas #profitabilityChart style="max-height:350px"></canvas>
+            <p *ngIf="profitabilityEntries.length === 0" class="text-muted text-center mt-3">No profitability data</p>
+          </div>
+        </div>
       </div>
-      <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-          <thead class="table-dark"><tr><th>Car / Model</th><th>Net Profit / Loss</th><th>Indicator</th></tr></thead>
-          <tbody>
-            <tr *ngFor="let e of profitabilityEntries" [ngClass]="{'table-success': +e[1] >= 0, 'table-danger': +e[1] < 0}">
-              <td class="fw-semibold">{{e[0]}}</td>
-              <td class="fw-bold" [ngClass]="+e[1] >= 0 ? 'text-success' : 'text-danger'">₹{{e[1] | number:'1.0-0'}}</td>
-              <td><span class="badge" [ngClass]="+e[1] >= 0 ? 'bg-success' : 'bg-danger'">{{+e[1] >= 0 ? 'Profitable' : 'Loss'}}</span></td>
-            </tr>
-            <tr *ngIf="profitabilityEntries.length === 0"><td colspan="3" class="text-center text-muted py-3">No profitability data</td></tr>
-          </tbody>
-        </table>
+      <div class="col-md-6">
+        <div class="card border-success">
+          <div class="card-header fw-bold bg-success text-white"><i class="bi bi-trophy-fill me-2"></i>Most Profitable Cars</div>
+          <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+              <thead class="table-light"><tr><th>Rank</th><th>Model</th><th>Net Profit</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let e of mostProfitable; let i = index" class="table-success">
+                  <td><span class="badge bg-success">#{{i+1}}</span></td>
+                  <td class="fw-semibold">{{e[0]}}</td>
+                  <td class="text-success fw-bold">₹{{e[1] | number:'1.0-0'}}</td>
+                </tr>
+                <tr *ngIf="mostProfitable.length === 0"><td colspan="3" class="text-center text-muted py-3">No profitable cars yet</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card border-danger">
+          <div class="card-header fw-bold bg-danger text-white"><i class="bi bi-exclamation-triangle-fill me-2"></i>Least Profitable Cars</div>
+          <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+              <thead class="table-light"><tr><th>Rank</th><th>Model</th><th>Net Profit/Loss</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let e of leastProfitable; let i = index" [ngClass]="e[1] < 0 ? 'table-danger' : ''">
+                  <td><span class="badge" [ngClass]="e[1] < 0 ? 'bg-danger' : 'bg-warning text-dark'">#{{i+1}}</span></td>
+                  <td class="fw-semibold">{{e[0]}}</td>
+                  <td [ngClass]="e[1] < 0 ? 'text-danger fw-bold' : 'text-warning fw-bold'">₹{{e[1] | number:'1.0-0'}}</td>
+                  <td><span class="badge" [ngClass]="e[1] < 0 ? 'bg-danger' : 'bg-warning text-dark'">{{e[1] < 0 ? 'Loss' : 'Low Profit'}}</span></td>
+                </tr>
+                <tr *ngIf="leastProfitable.length === 0"><td colspan="4" class="text-center text-muted py-3">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
