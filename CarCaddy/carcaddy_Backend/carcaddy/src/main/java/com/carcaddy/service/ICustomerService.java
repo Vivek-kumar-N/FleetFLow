@@ -21,6 +21,8 @@ public interface ICustomerService {
 
     Customer blacklistCustomer(String customerId);
 
+    Customer unblacklistCustomer(String customerId);
+
     Integer getLoyaltyPoints(String customerId);
 
     void deleteCustomer(String customerId);

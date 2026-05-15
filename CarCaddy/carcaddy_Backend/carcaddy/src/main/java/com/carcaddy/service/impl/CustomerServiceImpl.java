@@ -1,182 +1,289 @@
 package com.carcaddy.service.impl;
 
-import com.carcaddy.entity.Car;
-import com.carcaddy.entity.CarStatus;
+import com.carcaddy.dto.CustomerDTO;
+import com.carcaddy.entity.Customer;
 import com.carcaddy.exception.InvalidEntityException;
-import com.carcaddy.repository.CarRepository;
-import com.carcaddy.service.ICarService;
+import com.carcaddy.repository.CustomerRepository;
+import com.carcaddy.service.ICustomerService;
+
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
-public class CarServiceImpl implements ICarService {
+public class CustomerServiceImpl implements ICustomerService {
 
-    private final CarRepository carRepository;
+    private final CustomerRepository repository;
+    private static final Logger log = LoggerFactory.getLogger(CustomerServiceImpl.class);
 
-    /* ---------------- ADD ---------------- */
+    // ---------------- DTO <-> Entity Mapping Methods----------------
+
+    
+     //Converts CustomerDTO to Customer entity (does not set system-controlled fields like customerId).
+    
+    private Customer dtoToEntity(CustomerDTO dto) {
+        Customer customer = new Customer();
+        customer.setCustomerName(dto.getCustomerName());
+        customer.setContactNumber(dto.getContactNumber());
+        customer.setDrivingLicense(dto.getDrivingLicense());
+        customer.setOccupation(dto.getOccupation());
+        customer.setAddress(dto.getAddress());
+        customer.setEmailId(dto.getEmailId());
+        return customer;
+    }
+
+    
+    // Converts Customer entity to CustomerDTO.
+     
+    private CustomerDTO entityToDto(Customer customer) {
+        CustomerDTO dto = new CustomerDTO();
+        dto.setCustomerName(customer.getCustomerName());
+        dto.setContactNumber(customer.getContactNumber());
+        dto.setDrivingLicense(customer.getDrivingLicense());
+        dto.setOccupation(customer.getOccupation());
+        dto.setAddress(customer.getAddress());
+        dto.setEmailId(customer.getEmailId());
+        return dto;
+    }
+
+    
+     // Applies incoming DTO fields onto an existing Customer entity.
+     // (Useful for update operations to keep the entity ID intact.)
+     
+    private void applyDtoToExistingEntity(Customer existing, CustomerDTO dto) {
+        existing.setCustomerName(dto.getCustomerName());
+        existing.setContactNumber(dto.getContactNumber());
+        existing.setDrivingLicense(dto.getDrivingLicense());
+        existing.setOccupation(dto.getOccupation());
+        existing.setAddress(dto.getAddress());
+        existing.setEmailId(dto.getEmailId());
+    }
+
+    // ---------------- Service Methods with Logging----------------
+
     @Override
-    public Car addCar(Car car) {
+    public Customer addCustomer(CustomerDTO dto) {
+        log.info("CustomerServiceImpl.addCustomer() called | emailId={}, drivingLicense={}",
+                dto.getEmailId(), dto.getDrivingLicense());
 
-        log.info("Request received to add car with registration number: {}",
-                car.getRegistrationNumber());
+        // uniqueness validation
+        repository.findByEmailId(dto.getEmailId()).ifPresent(c -> {
+            log.warn("Add customer blocked: email already exists | emailId={}", dto.getEmailId());
+            throw new InvalidEntityException("Customer with email " + dto.getEmailId() + " already exists");
+        });
 
-        if (carRepository.existsById(car.getRegistrationNumber())) {
-            log.warn("Car already exists with registration number: {}",
-                    car.getRegistrationNumber());
+        repository.findByDrivingLicense(dto.getDrivingLicense()).ifPresent(c -> {
+            log.warn("Add customer blocked: driving license already exists | drivingLicense={}",
+                    dto.getDrivingLicense());
             throw new InvalidEntityException(
-                    "Car already exists with registration number: " + car.getRegistrationNumber()
-            );
-        }
+                    "Customer with driving license " + dto.getDrivingLicense() + " already exists");
+        });
 
-        car.setRentalCount(0);
-        car.setStatus(CarStatus.AVAILABLE);
+        // Generate sequential customerId in format CUST-001
+        long count = repository.getCustomerCount() + 1;
+        String customerId = String.format("CUST-%03d", count);
 
-        Car savedCar = carRepository.save(car);
-        log.info("Car added successfully with registration number: {}",
-                savedCar.getRegistrationNumber());
+        // Use mapper method (DTO -> Entity)
+        Customer customer = dtoToEntity(dto);
+        customer.setCustomerId(customerId);
 
-        return savedCar;
-    }
+        // system defaults
+        customer.setBlacklisted(false);
+        customer.setLoyaltyPoints(0);
 
-    /* ---------------- UPDATE ---------------- */
-    @Override
-    public Car updateCar(String registrationNumber, Car updatedCar) {
+        Customer saved = repository.save(customer);
+        log.info("Customer created successfully | customerId={}", saved.getCustomerId());
 
-        log.info("Updating car details for registration number: {}", registrationNumber);
-
-        Car existingCar = getCarByRegistrationNumber(registrationNumber);
-
-        existingCar.setCategory(updatedCar.getCategory());
-        existingCar.setColor(updatedCar.getColor());
-        existingCar.setCarCondition(updatedCar.getCarCondition());
-        existingCar.setInsuranceNumber(updatedCar.getInsuranceNumber());
-        existingCar.setLastServiceDate(updatedCar.getLastServiceDate());
-        existingCar.setLastServiceMileage(updatedCar.getLastServiceMileage());
-        existingCar.setMileage(updatedCar.getMileage());
-        existingCar.setModel(updatedCar.getModel());
-        existingCar.setRentalRatePerDay(updatedCar.getRentalRatePerDay());
-
-        log.info("Car details updated for registration number: {}", registrationNumber);
-        return carRepository.save(existingCar);
+        // entityToDto() implemented; can be used later for DTO-based responses if
+        // needed
+        return saved;
     }
 
     @Override
-    public Car updateCarStatus(String registrationNumber, CarStatus status) {
+    public Customer updateCustomer(String id, CustomerDTO dto) {
+        log.info("CustomerServiceImpl.updateCustomer() called | customerId={}", id);
 
-        log.info("Updating status for car {} to {}", registrationNumber, status);
-
-        if (status == null) {
-            log.warn("Invalid car status provided for registration number: {}", registrationNumber);
-            throw new InvalidEntityException("Car status cannot be null");
-        }
-
-        Car car = getCarByRegistrationNumber(registrationNumber);
-        car.setStatus(status);
-
-        log.info("Car status updated successfully for {} to {}",
-                registrationNumber, status);
-
-        return carRepository.save(car);
-    }
-
-    @Override
-    public Car updateMileageAfterRental(String registrationNumber, Double newMileage) {
-
-        log.info("Updating mileage for car {} after rental. New mileage: {}",
-                registrationNumber, newMileage);
-
-        Car car = getCarByRegistrationNumber(registrationNumber);
-        car.setMileage(newMileage);
-        car.setRentalCount(car.getRentalCount() + 1);
-
-        if (needsMaintenance(car)) {
-            log.warn("Car {} requires maintenance. Status changed to MAINTENANCE",
-                    registrationNumber);
-            car.setStatus(CarStatus.MAINTENANCE);
-        }
-
-        return carRepository.save(car);
-    }
-
-    /* ---------------- FETCH ---------------- */
-    @Override
-    public List<Car> getAllCars() {
-        log.info("Fetching all cars");
-        return carRepository.findAll();
-    }
-
-    @Override
-    public Car getCarByRegistrationNumber(String registrationNumber) {
-
-        log.debug("Fetching car with registration number: {}", registrationNumber);
-
-        return carRepository.findById(registrationNumber)
+        Customer customer = repository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Car not found with registration number: {}", registrationNumber);
-                    return new InvalidEntityException(
-                            "Car not found with registration number: " + registrationNumber);
+                    log.warn("Update customer failed: customer not found | customerId={}", id);
+                    return new InvalidEntityException("Customer Id " + id + " is not found");
+                });
+
+        // Keep ID, update other fields (use helper)
+        // If you don't want driving license/contact updates here, you can remove those
+        // lines from applyDtoToExistingEntity.
+        applyDtoToExistingEntity(customer, dto);
+
+        Customer updated = repository.save(customer);
+        log.info("Customer updated successfully | customerId={}", updated.getCustomerId());
+        return updated;
+    }
+
+    @Override
+    public Customer updateContact(String id, String contact) {
+        log.info("CustomerServiceImpl.updateContact() called | customerId={}, newContact={}", id, contact);
+
+        Customer customer = repository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Update contact failed: customer not found | customerId={}", id);
+                    return new InvalidEntityException("Customer ID " + id + " not found");
+                });
+
+        customer.setContactNumber(contact);
+        Customer updated = repository.save(customer);
+
+        log.info("Customer contact updated successfully | customerId={}", updated.getCustomerId());
+        return updated;
+    }
+
+    @Override
+    public List<Customer> getAllCustomers() {
+        log.info("CustomerServiceImpl.getAllCustomers() called");
+        List<Customer> customers = repository.findAll();
+        log.info("Total customers fetched={}", customers.size());
+        return customers;
+    }
+
+    @Override
+    public Customer getCustomerById(String id) {
+        log.info("CustomerServiceImpl.getCustomerById() called | customerId={}", id);
+
+        return repository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Get customer failed: customer not found | customerId={}", id);
+                    return new InvalidEntityException("Customer Id " + id + " is not found");
                 });
     }
 
     @Override
-    public List<Car> getCarsByModel(String model) {
-        log.info("Fetching cars by model: {}", model);
-        return carRepository.findByModel(model);
+    public List<Customer> getCustomersByName(String name) {
+        log.info("CustomerServiceImpl.getCustomersByName() called | name={}", name);
+
+        List<Customer> customers = repository.findByCustomerNameContainingIgnoreCase(name);
+        log.info("Customers matched by name='{}' => count={}", name, customers.size());
+        return customers;
     }
 
     @Override
-    public List<Car> getCarsByCategory(String category) {
-        log.info("Fetching cars by category: {}", category);
-        return carRepository.findByCategory(category);
+    public Customer blacklistCustomer(String id) {
+        log.info("CustomerServiceImpl.blacklistCustomer() called | customerId={}", id);
+
+        Customer customer = getCustomerById(id);
+        customer.setBlacklisted(true);
+
+        Customer updated = repository.save(customer);
+        log.info("Customer blacklisted successfully | customerId={}", updated.getCustomerId());
+        return updated;
     }
 
     @Override
-    public List<Car> getCarsByStatus(CarStatus status) {
-        log.info("Fetching cars with status: {}", status);
-        return carRepository.findByStatus(status);
+    public Customer unblacklistCustomer(String id) {
+        log.info("CustomerServiceImpl.unblacklistCustomer() called | customerId={}", id);
+
+        Customer customer = getCustomerById(id);
+        customer.setBlacklisted(false);
+        customer.setBlacklistReason(null);
+
+        Customer updated = repository.save(customer);
+        log.info("Customer unblacklisted successfully | customerId={}", updated.getCustomerId());
+        return updated;
     }
 
     @Override
-    public List<Car> getAvailableCars() {
-        log.info("Fetching available cars");
-        return carRepository.findByStatus(CarStatus.AVAILABLE);
+    public Integer getLoyaltyPoints(String customerId) {
+        log.info("CustomerServiceImpl.getLoyaltyPoints() called | customerId={}", customerId);
+
+        Customer customer = repository.findById(customerId)
+                .orElseThrow(() -> {
+                    log.warn("Get loyalty points failed: customer not found | customerId={}", customerId);
+                    return new InvalidEntityException("Customer ID " + customerId + " not found");
+                });
+
+        Integer points = customer.getLoyaltyPoints();
+        log.info("Loyalty points fetched | customerId={}, points={}", customerId, points);
+        return points;
+    }
+
+
+    @Override
+public double calculateLoyaltyDiscount(String customerId) {
+    log.info("CustomerServiceImpl.calculateLoyaltyDiscount() called | customerId={}", customerId);
+
+    Customer customer = repository.findById(customerId)
+            .orElseThrow(() -> {
+                log.warn("Calculate discount failed: customer not found | customerId={}", customerId);
+                return new InvalidEntityException("Customer ID " + customerId + " not found");
+            });
+
+    int points = customer.getLoyaltyPoints();
+    double discount = points >= 100 ? 0.05 : 0.0;
+
+    log.info("Loyalty discount calculated | customerId={}, points={}, discount={}",
+            customerId, points, discount);
+
+    return discount;
+}
+
+
+@Override
+public boolean isEligibleForFreeRental(String customerId) {
+    log.info("CustomerServiceImpl.isEligibleForFreeRental() called | customerId={}", customerId);
+
+    Customer customer = repository.findById(customerId)
+            .orElseThrow(() -> {
+                log.warn("Free rental check failed: customer not found | customerId={}", customerId);
+                return new InvalidEntityException("Customer ID " + customerId + " not found");
+            });
+
+    boolean eligible = customer.getLoyaltyPoints() >= 500;
+
+    log.info("Free rental eligibility result | customerId={}, eligible={}",
+            customerId, eligible);
+
+    return eligible;
+}
+
+
+@Override
+public List<Customer> getCustomersWithMaximumBookings() {
+    log.info("CustomerServiceImpl.getCustomersWithMaximumBookings() called");
+
+    List<String> customerIds = repository.findCustomerIdsWithMaximumBookings();
+    List<Customer> customers = repository.findAllById(customerIds);
+
+    log.info("Customers with maximum bookings fetched | count={}", customers.size());
+
+    return customers;
+}
+
+    @Override
+    public void deleteCustomer(String customerId) {
+        log.info("CustomerServiceImpl.deleteCustomer() called | customerId={}", customerId);
+
+        Customer customer = repository.findById(customerId)
+                .orElseThrow(() -> {
+                    log.warn("Delete customer failed: customer not found | customerId={}", customerId);
+                    return new InvalidEntityException("Customer ID " + customerId + " not found");
+                });
+
+        repository.delete(customer);
+        log.info("Customer deleted successfully | customerId={}", customerId);
     }
 
     @Override
-    public List<Car> getCarsRequiringMaintenance() {
-        log.info("Fetching cars requiring maintenance");
-        return carRepository.findAll().stream()
-                .filter(this::needsMaintenance)
-                .toList();
+    public Customer getCustomerByUsername(String username) {
+        log.info("CustomerServiceImpl.getCustomerByUsername() called | username={}", username);
+
+        return repository.findByAppUserUsername(username)
+                .orElseThrow(() -> {
+                    log.warn("Get customer by username failed: not found | username={}", username);
+                    return new InvalidEntityException("No customer profile linked to username: " + username);
+                });
     }
 
-    /* ---------------- BUSINESS RULES ---------------- */
-    @Override
-    public boolean needsMaintenance(Car car) {
-
-        // Rule 1: 5,000 km since last service
-        boolean mileageExceeded =
-                car.getLastServiceMileage() != null &&
-                car.getMileage() != null &&
-                (car.getMileage() - car.getLastServiceMileage()) >= 5_000;
-
-        // Rule 2: 90 days (3 months) since last service
-        boolean serviceOverdue =
-                car.getLastServiceDate() != null &&
-                ChronoUnit.DAYS.between(car.getLastServiceDate(), LocalDate.now()) >= 90;
-
-        // Rule 3: 20 rentals since last service
-        boolean rentalCountExceeded =
-                car.getRentalCount() != null &&
-                car.getRentalCount() >= 20;
-
-        return mileageExceeded || serviceOverdue || rentalCountExceeded;
-    }
 }
