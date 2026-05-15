@@ -62,7 +62,7 @@ export class EmployeeRentalsComponent implements OnInit {
       category:       ['Sedan', Validators.required],
       startDate:      ['', [Validators.required, presentOrFutureDate()]],
       endDate:        ['', Validators.required],
-      passengerCount: [1, [Validators.required, Validators.min(1), Validators.max(10)]]
+      passengerCount: [1, [Validators.required, Validators.min(1), Validators.max(5)]]
     }, { validators: endAfterStart() });
 
     this.returnForm = this.fb.group({
@@ -158,9 +158,9 @@ export class EmployeeRentalsComponent implements OnInit {
           this.checkingAvailability = false;
           return;
         }
-        const availableCars = cars.filter(c => c.status === 'AVAILABLE');
+        const availableCars = cars.filter(c => c.status !== 'MAINTENANCE');
         if (availableCars.length === 0) {
-          this.availabilityMsg = `All "${model}" cars are currently rented or in maintenance.`;
+          this.availabilityMsg = `All "${model}" cars are currently in maintenance.`;
           this.availabilityOk = false;
           this.checkingAvailability = false;
           return;

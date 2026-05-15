@@ -80,7 +80,7 @@ export class CustomerRentalsComponent implements OnInit {
       category:       ['Sedan', Validators.required],
       startDate:      ['', [Validators.required, presentOrFutureDate()]],
       endDate:        ['', Validators.required],
-      passengerCount: [1, [Validators.required, Validators.min(1), Validators.max(10)]]
+      passengerCount: [1, [Validators.required, Validators.min(1), Validators.max(5)]]
     }, { validators: endAfterStart() });
 
     this.modifyForm = this.fb.group({
@@ -156,7 +156,6 @@ export class CustomerRentalsComponent implements OnInit {
     this.availabilityMsg = '';
     this.availabilityOk = null;
 
-    // Get all cars of this model, then check availability for each
     this.carService.getCarsByModel(model).subscribe({
       next: (cars) => {
         if (cars.length === 0) {
@@ -166,25 +165,25 @@ export class CustomerRentalsComponent implements OnInit {
           return;
         }
 
-        // Check availability for each car using the backend endpoint
-        const availableCars = cars.filter(c => c.status === 'AVAILABLE');
-        if (availableCars.length === 0) {
-          this.availabilityMsg = `All "${model}" cars are currently rented or in maintenance. Please try a different model.`;
+        // Check ALL cars of this model (not just AVAILABLE status)
+        // A RENTED car may still be free for the requested dates
+        const carsToCheck = cars.filter(c => c.status !== 'MAINTENANCE');
+        if (carsToCheck.length === 0) {
+          this.availabilityMsg = `All "${model}" cars are currently in maintenance.`;
           this.availabilityOk = false;
           this.checkingAvailability = false;
           return;
         }
 
-        // Check date-based availability for at least one car
         let checked = 0;
         let foundAvailable = false;
 
-        for (const car of availableCars) {
+        for (const car of carsToCheck) {
           this.bookingService.checkAvailability(car.registrationNumber, startDate, endDate).subscribe({
             next: (available) => {
               checked++;
               if (available) foundAvailable = true;
-              if (checked === availableCars.length) {
+              if (checked === carsToCheck.length) {
                 this.checkingAvailability = false;
                 if (foundAvailable) {
                   this.availabilityMsg = `✓ Cars available for "${model}" on selected dates!`;
@@ -197,7 +196,7 @@ export class CustomerRentalsComponent implements OnInit {
             },
             error: () => {
               checked++;
-              if (checked === availableCars.length) {
+              if (checked === carsToCheck.length) {
                 this.checkingAvailability = false;
                 this.availabilityMsg = 'Could not check availability. Please try again.';
                 this.availabilityOk = null;
