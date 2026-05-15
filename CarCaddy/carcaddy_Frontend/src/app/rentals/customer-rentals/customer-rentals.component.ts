@@ -45,6 +45,8 @@ export class CustomerRentalsComponent implements OnInit {
   estimatedFare = 0;
   submitting = false;
   selectedBooking: Booking | null = null;
+  isBlacklisted = false;
+  blacklistReason = '';
 
   // Availability check state
   availabilityMsg = '';
@@ -94,6 +96,8 @@ export class CustomerRentalsComponent implements OnInit {
     this.customerService.getCustomerByUsername(username).subscribe({
       next: (customer) => {
         this.customerId = customer.customerId!;
+        this.isBlacklisted = customer.blacklisted || false;
+        this.blacklistReason = customer.blacklistReason || '';
         this.loadBookings();
         this.customerService.getLoyaltyDiscount(this.customerId).subscribe({
           next: (d: any) => { this.loyaltyDiscount = d.discountPercent || 0; },
@@ -211,6 +215,10 @@ export class CustomerRentalsComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    if (this.isBlacklisted) {
+      this.error = `Your account has been restricted and you cannot make new bookings.${this.blacklistReason ? ' Reason: ' + this.blacklistReason : ''} Please contact support.`;
+      return;
+    }
     this.bookingForm.reset({ category: 'Sedan', passengerCount: 1 });
     this.estimatedFare = 0;
     this.availabilityMsg = '';
