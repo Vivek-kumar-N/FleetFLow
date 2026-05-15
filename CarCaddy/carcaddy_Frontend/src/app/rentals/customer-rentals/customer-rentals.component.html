@@ -1,10 +1,15 @@
 <div class="container-fluid py-3">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="fw-bold mb-0"><i class="bi bi-car-front-fill text-primary me-2"></i>My Rentals</h5>
-    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="!customerId"><i class="bi bi-plus-lg me-1"></i>New Booking</button>
+    <button class="btn btn-primary btn-sm" (click)="openCreateModal()" [disabled]="!customerId || isBlacklisted"><i class="bi bi-plus-lg me-1"></i>New Booking</button>
   </div>
 
   <div *ngIf="!customerId && !loading" class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Your account is not linked to a customer profile. Please contact an employee to register.</div>
+  <div *ngIf="isBlacklisted" class="alert alert-danger">
+    <i class="bi bi-slash-circle me-2"></i><strong>Your account has been restricted.</strong>
+    <span *ngIf="blacklistReason"> Reason: {{blacklistReason}}.</span>
+    You cannot make new bookings. Please contact support to resolve this.
+  </div>
   <div *ngIf="success" class="alert alert-success alert-dismissible"><button type="button" class="btn-close" (click)="success=''"></button>{{success}}</div>
   <div *ngIf="error" class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" (click)="error=''"></button>{{error}}</div>
   <div *ngIf="loading" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
