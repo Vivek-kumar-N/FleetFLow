@@ -15,23 +15,37 @@ export class AdminMaintenanceComponent implements OnInit {
   loading = false;
   error = '';
   success = '';
+
+  // Filters
   typeFilter = '';
   statusFilter = '';
+  regSearch = '';
+  dateRangeStart = '';
+  dateRangeEnd = '';
 
+  // Modals
   showAddModal = false;
   showStatusModal = false;
   showDeleteModal = false;
+  showDetailModal = false;
+  showRoutineModal = false;
+  showCostModal = false;
+
   selectedRecord: Maintenance | null = null;
   submitting = false;
 
+  // Cost per car
+  carRegForCost = '';
+  totalCostForCar: number | null = null;
+  carMaintenanceHistory: Maintenance[] = [];
+  loadingCost = false;
+
   maintenanceForm: FormGroup;
   statusForm: FormGroup;
+  routineForm: FormGroup;
 
   types = ['ROUTINE', 'REPAIR', 'EMERGENCY'];
   statuses = ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
-
-  showRoutineModal = false;
-  routineForm: FormGroup;
 
   constructor(private maintenanceService: MaintenanceService, private fb: FormBuilder) {
     this.maintenanceForm = this.fb.group({
@@ -71,18 +85,68 @@ export class AdminMaintenanceComponent implements OnInit {
 
   applyFilters(): void {
     this.filteredRecords = this.records.filter(r => {
-      const matchType = !this.typeFilter || r.maintenanceType === this.typeFilter;
+      const matchType   = !this.typeFilter   || r.maintenanceType === this.typeFilter;
       const matchStatus = !this.statusFilter || r.status === this.statusFilter;
-      return matchType && matchStatus;
+      const matchReg    = !this.regSearch    || (r.registrationNumber || '').toLowerCase().includes(this.regSearch.toLowerCase());
+      let matchDate = true;
+      if (this.dateRangeStart && r.scheduledDate) {
+        matchDate = matchDate && r.scheduledDate >= this.dateRangeStart;
+      }
+      if (this.dateRangeEnd && r.scheduledDate) {
+        matchDate = matchDate && r.scheduledDate <= this.dateRangeEnd;
+      }
+      return matchType && matchStatus && matchReg && matchDate;
     });
   }
 
+  resetFilters(): void {
+    this.typeFilter = '';
+    this.statusFilter = '';
+    this.regSearch = '';
+    this.dateRangeStart = '';
+    this.dateRangeEnd = '';
+    this.applyFilters();
+  }
+
+  // ── Modals ────────────────────────────────────────────────────────────────
   openAddModal(): void { this.maintenanceForm.reset({ maintenanceType: 'ROUTINE', status: 'SCHEDULED', cost: 0 }); this.showAddModal = true; this.error = ''; this.success = ''; }
   openStatusModal(r: Maintenance): void { this.selectedRecord = r; this.statusForm.patchValue({ status: r.status, cost: r.cost, performedBy: r.performedBy }); this.showStatusModal = true; }
   openDeleteModal(r: Maintenance): void { this.selectedRecord = r; this.showDeleteModal = true; }
+  openDetailModal(r: Maintenance): void { this.selectedRecord = r; this.showDetailModal = true; }
   openRoutineModal(): void { this.routineForm.reset({ cost: 0, scheduledDate: new Date().toISOString().split('T')[0] }); this.showRoutineModal = true; this.error = ''; this.success = ''; }
-  closeModals(): void { this.showAddModal = false; this.showStatusModal = false; this.showDeleteModal = false; this.showRoutineModal = false; this.selectedRecord = null; this.submitting = false; }
 
+  openCostModal(): void {
+    this.carRegForCost = '';
+    this.totalCostForCar = null;
+    this.carMaintenanceHistory = [];
+    this.showCostModal = true;
+  }
+
+  lookupCarCost(): void {
+    if (!this.carRegForCost.trim()) return;
+    this.loadingCost = true;
+    this.maintenanceService.getTotalCostByCar(this.carRegForCost).subscribe({
+      next: cost => { this.totalCostForCar = cost; this.loadingCost = false; },
+      error: () => { this.loadingCost = false; }
+    });
+    this.maintenanceService.getByCarRegistration(this.carRegForCost).subscribe({
+      next: records => { this.carMaintenanceHistory = records; },
+      error: () => {}
+    });
+  }
+
+  closeModals(): void {
+    this.showAddModal = false;
+    this.showStatusModal = false;
+    this.showDeleteModal = false;
+    this.showDetailModal = false;
+    this.showRoutineModal = false;
+    this.showCostModal = false;
+    this.selectedRecord = null;
+    this.submitting = false;
+  }
+
+  // ── CRUD ──────────────────────────────────────────────────────────────────
   submitMaintenance(): void {
     if (this.maintenanceForm.invalid) { this.maintenanceForm.markAllAsTouched(); return; }
     this.submitting = true;
@@ -131,6 +195,5 @@ export class AdminMaintenanceComponent implements OnInit {
   }
 
   get rf() { return this.routineForm.controls; }
-
-  get f() { return this.maintenanceForm.controls; }
+  get f()  { return this.maintenanceForm.controls; }
 }

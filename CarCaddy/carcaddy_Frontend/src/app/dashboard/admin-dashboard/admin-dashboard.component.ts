@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ReportsService } from '../../services/reports.service';
+import { CarService } from '../../services/car.service';
 import { DashboardStats } from '../../models/models';
 
 @Component({
@@ -16,14 +17,13 @@ export class AdminDashboardComponent implements OnInit {
   maintenanceCostByModel: any = {};
   carUtilization: any = {};
   loyaltyAnalytics: any = {};
+  carsNeedingMaintenance: any[] = [];
   loading = true;
   error = '';
 
-  constructor(private reportsService: ReportsService) {}
+  constructor(private reportsService: ReportsService, private carService: CarService) {}
 
-  ngOnInit(): void {
-    this.loadAll();
-  }
+  ngOnInit(): void { this.loadAll(); }
 
   loadAll(): void {
     this.loading = true;
@@ -35,12 +35,13 @@ export class AdminDashboardComponent implements OnInit {
     this.reportsService.getMaintenanceCostByCarModel().subscribe({ next: d => this.maintenanceCostByModel = d, error: () => {} });
     this.reportsService.getCarUtilizationReport().subscribe({ next: d => this.carUtilization = d, error: () => {} });
     this.reportsService.getCustomerLoyaltyAnalytics().subscribe({ next: d => this.loyaltyAnalytics = d, error: () => {} });
+    this.carService.getCarsRequiringMaintenance().subscribe({ next: d => this.carsNeedingMaintenance = d, error: () => {} });
   }
 
-  get incomeEntries(): [string, number][] { return Object.entries(this.incomeByModel || {}).map(([k, v]) => [k, Number(v)]); }
-  get maintenanceEntries(): [string, number][] { return Object.entries(this.maintenanceCostByModel || {}).map(([k, v]) => [k, Number(v)]); }
-  get utilizationEntries(): [string, number][] { return Object.entries(this.carUtilization || {}).map(([k, v]) => [k, Number(v)]); }
-  get minimalEntries(): [string, number][] { return Object.entries(this.minimalBookingsCars || {}).map(([k, v]) => [k, Number(v)]); }
+  get incomeEntries(): [string, number][] { return Object.entries(this.incomeByModel || {}).map(([k, v]) => [k, Number(v)] as [string, number]); }
+  get maintenanceEntries(): [string, number][] { return Object.entries(this.maintenanceCostByModel || {}).map(([k, v]) => [k, Number(v)] as [string, number]); }
+  get utilizationEntries(): [string, number][] { return Object.entries(this.carUtilization || {}).map(([k, v]) => [k, Number(v)] as [string, number]); }
+  get minimalEntries(): [string, number][] { return Object.entries(this.minimalBookingsCars || {}).map(([k, v]) => [k, Number(v)] as [string, number]); }
 
   getPercent(val: any, entries: any[]): number {
     const max = Math.max(...entries.map(e => Number(e[1])));
