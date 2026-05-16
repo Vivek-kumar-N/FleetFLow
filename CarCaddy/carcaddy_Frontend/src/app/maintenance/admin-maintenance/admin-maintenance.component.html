@@ -1,8 +1,9 @@
 <div class="container-fluid py-3">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <h5 class="fw-bold mb-0"><i class="bi bi-tools text-danger me-2"></i>Maintenance Management</h5>
-    <div>
-      <button class="btn btn-outline-info btn-sm me-2" (click)="openRoutineModal()"><i class="bi bi-calendar-plus me-1"></i>Schedule Routine</button>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn btn-outline-secondary btn-sm" (click)="openCostModal()"><i class="bi bi-currency-rupee me-1"></i>Cost per Car</button>
+      <button class="btn btn-outline-info btn-sm" (click)="openRoutineModal()"><i class="bi bi-calendar-plus me-1"></i>Schedule Routine</button>
       <button class="btn btn-danger btn-sm" (click)="openAddModal()"><i class="bi bi-plus-lg me-1"></i>Add Record</button>
     </div>
   </div>
@@ -10,12 +11,34 @@
   <div *ngIf="success" class="alert alert-success alert-dismissible"><button type="button" class="btn-close" (click)="success=''"></button>{{success}}</div>
   <div *ngIf="error" class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" (click)="error=''"></button>{{error}}</div>
 
+  <!-- Advanced Search & Multi-Filter -->
   <div class="card mb-3">
     <div class="card-body py-2">
       <div class="row g-2">
-        <div class="col-md-4"><select class="form-select form-select-sm" [(ngModel)]="typeFilter" (change)="applyFilters()"><option value="">All Types</option><option *ngFor="let t of types" [value]="t">{{t}}</option></select></div>
-        <div class="col-md-4"><select class="form-select form-select-sm" [(ngModel)]="statusFilter" (change)="applyFilters()"><option value="">All Status</option><option *ngFor="let s of statuses" [value]="s">{{s}}</option></select></div>
-        <div class="col-md-4"><button class="btn btn-outline-secondary btn-sm w-100" (click)="typeFilter='';statusFilter='';applyFilters()">Reset</button></div>
+        <div class="col-md-3">
+          <input type="text" class="form-control form-control-sm" placeholder="Search by car registration..." [(ngModel)]="regSearch" (input)="applyFilters()">
+        </div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" [(ngModel)]="typeFilter" (change)="applyFilters()">
+            <option value="">All Types</option>
+            <option *ngFor="let t of types" [value]="t">{{t}}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select form-select-sm" [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="">All Status</option>
+            <option *ngFor="let s of statuses" [value]="s">{{s}}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <input type="date" class="form-control form-control-sm" [(ngModel)]="dateRangeStart" (change)="applyFilters()" placeholder="From date">
+        </div>
+        <div class="col-md-2">
+          <input type="date" class="form-control form-control-sm" [(ngModel)]="dateRangeEnd" (change)="applyFilters()" placeholder="To date">
+        </div>
+        <div class="col-md-1">
+          <button class="btn btn-outline-secondary btn-sm w-100" (click)="resetFilters()">Reset</button>
+        </div>
       </div>
     </div>
   </div>
@@ -24,9 +47,11 @@
     <div class="card-body p-0">
       <div *ngIf="loading" class="text-center py-4"><div class="spinner-border text-primary"></div></div>
       <table *ngIf="!loading" class="table table-hover mb-0">
-        <thead class="table-dark"><tr><th>ID</th><th>Car</th><th>Type</th><th>Scheduled</th><th>Completed</th><th>Cost</th><th>Performed By</th><th>Status</th><th>Actions</th></tr></thead>
+        <thead class="table-dark">
+          <tr><th>ID</th><th>Car</th><th>Type</th><th>Scheduled</th><th>Completed</th><th>Cost</th><th>Performed By</th><th>Status</th><th>Actions</th></tr>
+        </thead>
         <tbody>
-          <tr *ngFor="let r of filteredRecords">
+          <tr *ngFor="let r of filteredRecords" style="cursor:pointer" (click)="openDetailModal(r)">
             <td>{{r.maintenanceId}}</td>
             <td class="fw-semibold">{{r.registrationNumber}}</td>
             <td><span class="badge" [ngClass]="{'bg-danger':r.maintenanceType==='EMERGENCY','bg-warning text-dark':r.maintenanceType==='ROUTINE','bg-info text-dark':r.maintenanceType==='REPAIR'}">{{r.maintenanceType}}</span></td>
@@ -35,7 +60,8 @@
             <td>₹{{r.cost | number:'1.0-0'}}</td>
             <td>{{r.performedBy || '-'}}</td>
             <td><span class="badge" [ngClass]="{'bg-secondary':r.status==='SCHEDULED','bg-warning text-dark':r.status==='IN_PROGRESS','bg-success':r.status==='COMPLETED','bg-danger':r.status==='CANCELLED'}">{{r.status}}</span></td>
-            <td>
+            <td (click)="$event.stopPropagation()">
+              <button class="btn btn-xs btn-outline-info me-1" title="View Details" (click)="openDetailModal(r)"><i class="bi bi-eye"></i></button>
               <button class="btn btn-xs btn-outline-warning me-1" title="Update Status" (click)="openStatusModal(r)"><i class="bi bi-arrow-repeat"></i></button>
               <button class="btn btn-xs btn-outline-danger" title="Delete" (click)="openDeleteModal(r)"><i class="bi bi-trash"></i></button>
             </td>
@@ -43,6 +69,84 @@
           <tr *ngIf="filteredRecords.length === 0"><td colspan="9" class="text-center text-muted py-4">No maintenance records found</td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade show d-block" *ngIf="showDetailModal" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Maintenance Record #{{selectedRecord?.maintenanceId}} — Details</h5><button class="btn-close" (click)="closeModals()"></button></div>
+      <div class="modal-body" *ngIf="selectedRecord">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="p-3 rounded border">
+              <div class="mb-2"><strong>Maintenance ID:</strong> #{{selectedRecord.maintenanceId}}</div>
+              <div class="mb-2"><strong>Car Registration:</strong> <span class="badge bg-primary">{{selectedRecord.registrationNumber}}</span></div>
+              <div class="mb-2"><strong>Type:</strong> <span class="badge" [ngClass]="{'bg-danger':selectedRecord.maintenanceType==='EMERGENCY','bg-warning text-dark':selectedRecord.maintenanceType==='ROUTINE','bg-info text-dark':selectedRecord.maintenanceType==='REPAIR'}">{{selectedRecord.maintenanceType}}</span></div>
+              <div class="mb-2"><strong>Status:</strong> <span class="badge" [ngClass]="{'bg-secondary':selectedRecord.status==='SCHEDULED','bg-warning text-dark':selectedRecord.status==='IN_PROGRESS','bg-success':selectedRecord.status==='COMPLETED','bg-danger':selectedRecord.status==='CANCELLED'}">{{selectedRecord.status}}</span></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 rounded border">
+              <div class="mb-2"><strong>Scheduled Date:</strong> {{selectedRecord.scheduledDate | date:'dd MMM yyyy'}}</div>
+              <div class="mb-2"><strong>Completed Date:</strong> {{selectedRecord.completedDate ? (selectedRecord.completedDate | date:'dd MMM yyyy') : 'Not completed yet'}}</div>
+              <div class="mb-2"><strong>Cost:</strong> <span class="text-danger fw-bold">₹{{selectedRecord.cost | number:'1.0-0'}}</span></div>
+              <div class="mb-2"><strong>Performed By:</strong> {{selectedRecord.performedBy || 'Not assigned'}}</div>
+            </div>
+          </div>
+          <div class="col-12" *ngIf="selectedRecord.description">
+            <div class="p-3 rounded border">
+              <strong>Description:</strong>
+              <p class="mb-0 mt-1 text-muted">{{selectedRecord.description}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">Close</button>
+        <button class="btn btn-warning" (click)="closeModals(); openStatusModal(selectedRecord!)">Update Status</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cost per Car Modal -->
+<div class="modal fade show d-block" *ngIf="showCostModal" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title"><i class="bi bi-currency-rupee me-2 text-warning"></i>Maintenance Cost Tracking per Car</h5><button class="btn-close" (click)="closeModals()"></button></div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" [(ngModel)]="carRegForCost" placeholder="Enter car registration number (e.g. MH01AB1234)">
+          <button class="btn btn-primary" (click)="lookupCarCost()" [disabled]="loadingCost">
+            <span *ngIf="loadingCost" class="spinner-border spinner-border-sm me-1"></span>
+            <i *ngIf="!loadingCost" class="bi bi-search me-1"></i>Lookup
+          </button>
+        </div>
+        <div *ngIf="totalCostForCar !== null" class="alert alert-info">
+          <strong>Total Maintenance Cost for {{carRegForCost}}:</strong>
+          <span class="fs-5 fw-bold text-danger ms-2">₹{{totalCostForCar | number:'1.0-0'}}</span>
+        </div>
+        <div *ngIf="carMaintenanceHistory.length > 0">
+          <h6 class="fw-bold mb-2">Maintenance History — {{carRegForCost}}</h6>
+          <table class="table table-sm table-hover">
+            <thead class="table-light"><tr><th>ID</th><th>Type</th><th>Scheduled</th><th>Cost</th><th>Performed By</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of carMaintenanceHistory">
+                <td>#{{r.maintenanceId}}</td>
+                <td><span class="badge" [ngClass]="{'bg-danger':r.maintenanceType==='EMERGENCY','bg-warning text-dark':r.maintenanceType==='ROUTINE','bg-info text-dark':r.maintenanceType==='REPAIR'}">{{r.maintenanceType}}</span></td>
+                <td>{{r.scheduledDate | date:'dd MMM yyyy'}}</td>
+                <td class="text-danger fw-bold">₹{{r.cost | number:'1.0-0'}}</td>
+                <td>{{r.performedBy || '-'}}</td>
+                <td><span class="badge" [ngClass]="{'bg-secondary':r.status==='SCHEDULED','bg-warning text-dark':r.status==='IN_PROGRESS','bg-success':r.status==='COMPLETED','bg-danger':r.status==='CANCELLED'}">{{r.status}}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" (click)="closeModals()">Close</button></div>
     </div>
   </div>
 </div>
@@ -55,37 +159,13 @@
       <div class="modal-body">
         <form [formGroup]="maintenanceForm">
           <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Car Registration No. *</label>
-              <input class="form-control" [class.is-invalid]="f['registrationNumber'].touched && f['registrationNumber'].errors" formControlName="registrationNumber" placeholder="e.g. MH01AB1234">
-              <div class="invalid-feedback">Registration number is required.</div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Type *</label>
-              <select class="form-select" formControlName="maintenanceType"><option *ngFor="let t of types" [value]="t">{{t}}</option></select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Scheduled Date *</label>
-              <input type="date" class="form-control" [class.is-invalid]="f['scheduledDate'].touched && f['scheduledDate'].errors" formControlName="scheduledDate">
-              <div class="invalid-feedback">Scheduled date is required.</div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Status *</label>
-              <select class="form-select" formControlName="status"><option *ngFor="let s of statuses" [value]="s">{{s}}</option></select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Cost (₹)</label>
-              <input type="number" class="form-control" [class.is-invalid]="f['cost'].touched && f['cost'].errors" formControlName="cost" min="0">
-              <div class="invalid-feedback">Cost must be 0 or more.</div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Performed By</label>
-              <input class="form-control" formControlName="performedBy" placeholder="Mechanic / Service Center">
-            </div>
-            <div class="col-12">
-              <label class="form-label">Description</label>
-              <textarea class="form-control" rows="2" formControlName="description"></textarea>
-            </div>
+            <div class="col-md-6"><label class="form-label">Car Registration No. *</label><input class="form-control" [class.is-invalid]="f['registrationNumber'].touched && f['registrationNumber'].errors" formControlName="registrationNumber" placeholder="e.g. MH01AB1234"><div class="invalid-feedback">Registration number is required.</div></div>
+            <div class="col-md-6"><label class="form-label">Type *</label><select class="form-select" formControlName="maintenanceType"><option *ngFor="let t of types" [value]="t">{{t}}</option></select></div>
+            <div class="col-md-6"><label class="form-label">Scheduled Date *</label><input type="date" class="form-control" [class.is-invalid]="f['scheduledDate'].touched && f['scheduledDate'].errors" formControlName="scheduledDate"><div class="invalid-feedback">Scheduled date is required.</div></div>
+            <div class="col-md-6"><label class="form-label">Status *</label><select class="form-select" formControlName="status"><option *ngFor="let s of statuses" [value]="s">{{s}}</option></select></div>
+            <div class="col-md-6"><label class="form-label">Cost (₹)</label><input type="number" class="form-control" [class.is-invalid]="f['cost'].touched && f['cost'].errors" formControlName="cost" min="0"><div class="invalid-feedback">Cost must be 0 or more.</div></div>
+            <div class="col-md-6"><label class="form-label">Performed By</label><input class="form-control" formControlName="performedBy" placeholder="Mechanic / Service Center"></div>
+            <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" rows="2" formControlName="description"></textarea></div>
           </div>
         </form>
       </div>
@@ -104,29 +184,11 @@
       <div class="modal-header"><h5 class="modal-title"><i class="bi bi-calendar-plus me-2 text-info"></i>Schedule Routine Maintenance</h5><button class="btn-close" (click)="closeModals()"></button></div>
       <div class="modal-body">
         <form [formGroup]="routineForm">
-          <div class="mb-3">
-            <label class="form-label">Car Registration No. *</label>
-            <input class="form-control" [class.is-invalid]="rf['registrationNumber'].touched && rf['registrationNumber'].errors" formControlName="registrationNumber" placeholder="e.g. MH01AB1234">
-            <div class="invalid-feedback">Registration number is required.</div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Scheduled Date *</label>
-            <input type="date" class="form-control" [class.is-invalid]="rf['scheduledDate'].touched && rf['scheduledDate'].errors" formControlName="scheduledDate">
-            <div class="invalid-feedback">Scheduled date is required.</div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Cost (₹)</label>
-            <input type="number" class="form-control" [class.is-invalid]="rf['cost'].touched && rf['cost'].errors" formControlName="cost" min="0">
-            <div class="invalid-feedback">Cost must be 0 or more.</div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Performed By</label>
-            <input class="form-control" formControlName="performedBy" placeholder="Mechanic / Service Center">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea class="form-control" rows="2" formControlName="description" placeholder="Routine check-up details..."></textarea>
-          </div>
+          <div class="mb-3"><label class="form-label">Car Registration No. *</label><input class="form-control" [class.is-invalid]="rf['registrationNumber'].touched && rf['registrationNumber'].errors" formControlName="registrationNumber" placeholder="e.g. MH01AB1234"><div class="invalid-feedback">Registration number is required.</div></div>
+          <div class="mb-3"><label class="form-label">Scheduled Date *</label><input type="date" class="form-control" [class.is-invalid]="rf['scheduledDate'].touched && rf['scheduledDate'].errors" formControlName="scheduledDate"><div class="invalid-feedback">Scheduled date is required.</div></div>
+          <div class="mb-3"><label class="form-label">Cost (₹)</label><input type="number" class="form-control" formControlName="cost" min="0"></div>
+          <div class="mb-3"><label class="form-label">Performed By</label><input class="form-control" formControlName="performedBy" placeholder="Mechanic / Service Center"></div>
+          <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" rows="2" formControlName="description" placeholder="Routine check-up details..."></textarea></div>
         </form>
       </div>
       <div class="modal-footer">

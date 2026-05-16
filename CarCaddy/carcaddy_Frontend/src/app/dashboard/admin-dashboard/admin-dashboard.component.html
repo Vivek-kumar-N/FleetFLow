@@ -50,27 +50,21 @@
     </div>
 
     <div class="row g-3 mb-4">
-      <!-- Fleet Health -->
+      <!-- Fleet Health Report -->
       <div class="col-md-4">
         <div class="card h-100">
-          <div class="card-header fw-bold"><i class="bi bi-heart-pulse-fill text-danger me-2"></i>Fleet Health</div>
+          <div class="card-header fw-bold"><i class="bi bi-heart-pulse-fill text-danger me-2"></i>Fleet Health Report</div>
           <div class="card-body">
-            <div class="d-flex justify-content-between mb-2">
-              <span>Available</span><span class="badge bg-success">{{fleetHealth?.availableCars || 0}}</span>
-            </div>
-            <div class="d-flex justify-content-between mb-2">
-              <span>Rented</span><span class="badge bg-warning text-dark">{{fleetHealth?.rentedCars || 0}}</span>
-            </div>
-            <div class="d-flex justify-content-between mb-2">
-              <span>In Maintenance</span><span class="badge bg-danger">{{fleetHealth?.maintenanceCars || 0}}</span>
-            </div>
-            <div class="d-flex justify-content-between mb-2">
-              <span>Due for Service</span><span class="badge bg-secondary">{{fleetHealth?.carsDueForService || 0}}</span>
-            </div>
+            <div class="d-flex justify-content-between mb-2"><span>Available</span><span class="badge bg-success">{{fleetHealth?.availableCars || 0}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>Rented</span><span class="badge bg-warning text-dark">{{fleetHealth?.rentedCars || 0}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>In Maintenance</span><span class="badge bg-danger">{{fleetHealth?.maintenanceCars || 0}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>Due for Service</span><span class="badge bg-secondary">{{fleetHealth?.carsDueForService || 0}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>Avg Mileage</span><span class="fw-bold">{{fleetHealth?.averageMileage || 0 | number:'1.0-0'}} km</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>Total Cars</span><span class="fw-bold">{{fleetHealth?.totalCars || 0}}</span></div>
             <div class="progress mt-3" style="height:10px">
               <div class="progress-bar bg-success" [style.width.%]="fleetHealth?.fleetUtilization || 0"></div>
             </div>
-            <small class="text-muted">{{fleetHealth?.fleetUtilization || 0 | number:'1.0-1'}}% utilization</small>
+            <small class="text-muted">{{fleetHealth?.fleetUtilization || 0 | number:'1.0-1'}}% fleet utilization (availability rate: {{fleetHealth?.totalCars > 0 ? ((fleetHealth?.availableCars / fleetHealth?.totalCars) * 100 | number:'1.0-1') : 0}}%)</small>
           </div>
         </div>
       </div>
@@ -112,6 +106,34 @@
 
     <!-- Analytics Row -->
     <div class="row g-3">
+      <!-- Auto-Maintenance Alerts -->
+      <div class="col-12" *ngIf="carsNeedingMaintenance.length > 0">
+        <div class="card border-warning">
+          <div class="card-header fw-bold bg-warning text-dark">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>Auto-Maintenance Alerts — {{carsNeedingMaintenance.length}} car(s) require service
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+              <thead class="table-light"><tr><th>Reg No.</th><th>Model</th><th>Mileage</th><th>Last Service</th><th>Rental Count</th><th>Trigger Reason</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let car of carsNeedingMaintenance" class="table-warning">
+                  <td class="fw-semibold">{{car.registrationNumber}}</td>
+                  <td>{{car.model}}</td>
+                  <td>{{car.mileage | number:'1.0-0'}} km</td>
+                  <td>{{car.lastServiceDate ? (car.lastServiceDate | date:'dd MMM yyyy') : 'Never'}}</td>
+                  <td>{{car.rentalCount || 0}}</td>
+                  <td>
+                    <span *ngIf="car.lastServiceMileage && (car.mileage - car.lastServiceMileage) >= 5000" class="badge bg-danger me-1">5,000 km exceeded</span>
+                    <span *ngIf="car.rentalCount >= 20" class="badge bg-warning text-dark me-1">20 rentals reached</span>
+                    <span *ngIf="!car.lastServiceDate || car.lastServiceDate" class="badge bg-secondary">90-day check</span>
+                  </td>
+                  <td><span class="badge" [ngClass]="{'bg-success':car.status==='AVAILABLE','bg-warning text-dark':car.status==='RENTED','bg-danger':car.status==='MAINTENANCE'}">{{car.status}}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
       <!-- Revenue by Model -->
       <div class="col-md-6">
         <div class="card">
