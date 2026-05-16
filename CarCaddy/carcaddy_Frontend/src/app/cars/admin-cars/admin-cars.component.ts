@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CarService } from '../../services/car.service';
+import { MaintenanceService } from '../../services/maintenance.service';
 import { AuthService } from '../../services/auth.service';
-import { Car } from '../../models/models';
+import { Car, Maintenance } from '../../models/models';
 
 @Component({
   selector: 'app-admin-cars',
@@ -23,8 +24,12 @@ export class AdminCarsComponent implements OnInit {
   showEditModal = false;
   showStatusModal = false;
   showMileageModal = false;
+  showMaintenanceHistoryModal = false;
   selectedCar: Car | null = null;
   submitting = false;
+  carMaintenanceHistory: Maintenance[] = [];
+  carTotalMaintenanceCost = 0;
+  loadingHistory = false;
 
   carForm: FormGroup;
   statusForm: FormGroup;
@@ -34,7 +39,7 @@ export class AdminCarsComponent implements OnInit {
   conditions = ['Excellent', 'Good', 'Fair', 'Poor'];
   statuses = ['AVAILABLE', 'RENTED', 'MAINTENANCE'];
 
-  constructor(private carService: CarService, private fb: FormBuilder) {
+  constructor(private carService: CarService, private maintenanceService: MaintenanceService, private fb: FormBuilder) {
     this.carForm = this.fb.group({
       registrationNumber: ['', Validators.required],
       model: ['', Validators.required],
@@ -74,7 +79,24 @@ export class AdminCarsComponent implements OnInit {
   openEditModal(car: Car): void { this.selectedCar = car; this.carForm.patchValue(car); this.carForm.get('registrationNumber')?.disable(); this.showEditModal = true; }
   openStatusModal(car: Car): void { this.selectedCar = car; this.statusForm.patchValue({ status: car.status }); this.showStatusModal = true; }
   openMileageModal(car: Car): void { this.selectedCar = car; this.mileageForm.patchValue({ mileage: car.mileage || 0 }); this.showMileageModal = true; }
-  closeModals(): void { this.showAddModal = false; this.showEditModal = false; this.showStatusModal = false; this.showMileageModal = false; this.selectedCar = null; this.carForm.get('registrationNumber')?.enable(); this.submitting = false; }
+
+  openMaintenanceHistoryModal(car: Car): void {
+    this.selectedCar = car;
+    this.carMaintenanceHistory = [];
+    this.carTotalMaintenanceCost = 0;
+    this.loadingHistory = true;
+    this.showMaintenanceHistoryModal = true;
+    this.maintenanceService.getByCarRegistration(car.registrationNumber).subscribe({
+      next: records => { this.carMaintenanceHistory = records; this.loadingHistory = false; },
+      error: () => { this.loadingHistory = false; }
+    });
+    this.maintenanceService.getTotalCostByCar(car.registrationNumber).subscribe({
+      next: cost => { this.carTotalMaintenanceCost = cost || 0; },
+      error: () => {}
+    });
+  }
+
+  closeModals(): void { this.showAddModal = false; this.showEditModal = false; this.showStatusModal = false; this.showMileageModal = false; this.showMaintenanceHistoryModal = false; this.selectedCar = null; this.carForm.get('registrationNumber')?.enable(); this.submitting = false; }
 
   submitCar(): void {
     if (this.carForm.invalid) { this.carForm.markAllAsTouched(); return; }
