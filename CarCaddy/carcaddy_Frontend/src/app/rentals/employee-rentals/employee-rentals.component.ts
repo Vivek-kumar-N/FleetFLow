@@ -200,8 +200,9 @@ export class EmployeeRentalsComponent implements OnInit {
     });
   }
 
+  /** Check availability for the modify form — uses new model if provided, else existing car */
   checkModifyAvailability(): void {
-    const { startDate, endDate } = this.modifyForm.value;
+    const { startDate, endDate, model } = this.modifyForm.value;
     if (!startDate || !endDate || !this.selectedBooking) return;
     if (this.modifyForm.hasError('endBeforeStart')) return;
 
@@ -209,26 +210,50 @@ export class EmployeeRentalsComponent implements OnInit {
     this.modifyAvailabilityMsg = '';
     this.modifyAvailabilityOk = null;
 
-    const regNo = this.selectedBooking.car?.registrationNumber;
-    if (!regNo) { this.checkingModifyAvailability = false; return; }
-
-    this.bookingService.checkAvailability(regNo, startDate, endDate).subscribe({
-      next: (available) => {
-        this.checkingModifyAvailability = false;
-        if (available) {
-          this.modifyAvailabilityMsg = `✓ Car available for the new dates!`;
-          this.modifyAvailabilityOk = true;
-        } else {
-          this.modifyAvailabilityMsg = `Car is not available for ${startDate} to ${endDate}. Please choose different dates.`;
-          this.modifyAvailabilityOk = false;
-        }
-      },
-      error: () => {
-        this.checkingModifyAvailability = false;
-        this.modifyAvailabilityMsg = 'Could not check availability. Please try again.';
-        this.modifyAvailabilityOk = null;
-      }
-    });
+    if (model && model.trim()) {
+      this.carService.getCarsByModel(model).subscribe({
+        next: (cars) => {
+          const carsToCheck = cars.filter(c => c.status !== 'MAINTENANCE');
+          if (carsToCheck.length === 0) {
+            this.checkingModifyAvailability = false;
+            this.modifyAvailabilityMsg = `No "${model}" cars available (all in maintenance).`;
+            this.modifyAvailabilityOk = false;
+            return;
+          }
+          let checked = 0; let found = false;
+          for (const car of carsToCheck) {
+            this.bookingService.checkAvailability(car.registrationNumber, startDate, endDate).subscribe({
+              next: (available) => {
+                checked++;
+                if (available) found = true;
+                if (checked === carsToCheck.length) {
+                  this.checkingModifyAvailability = false;
+                  this.modifyAvailabilityMsg = found
+                    ? `✓ "${model}" cars available for the new dates!`
+                    : `No "${model}" cars available for ${startDate} to ${endDate}.`;
+                  this.modifyAvailabilityOk = found;
+                }
+              },
+              error: () => { checked++; if (checked === carsToCheck.length) { this.checkingModifyAvailability = false; } }
+            });
+          }
+        },
+        error: () => { this.checkingModifyAvailability = false; }
+      });
+    } else {
+      const regNo = this.selectedBooking.car?.registrationNumber;
+      if (!regNo) { this.checkingModifyAvailability = false; return; }
+      this.bookingService.checkAvailability(regNo, startDate, endDate).subscribe({
+        next: (available) => {
+          this.checkingModifyAvailability = false;
+          this.modifyAvailabilityMsg = available
+            ? `✓ Car available for the new dates!`
+            : `Car is not available for ${startDate} to ${endDate}. Please choose different dates.`;
+          this.modifyAvailabilityOk = available;
+        },
+        error: () => { this.checkingModifyAvailability = false; this.modifyAvailabilityMsg = 'Could not check availability.'; }
+      });
+    }
   }
 
   openCreateModal(): void {
@@ -273,7 +298,7 @@ export class EmployeeRentalsComponent implements OnInit {
     this.submitting = true;
     this.bookingService.createBooking(this.bookingForm.value).subscribe({
       next: (b: any) => {
-        this.success = `Booking created! Car: ${b.car?.model || ''} (${b.car?.registrationNumber || 'allocated'}). Fare: ₹${b.totalFare?.toFixed(0)}${b.discount ? ' (' + b.discount + '% discount)' : ''}`;
+        this.success = `Booking created! Allocated Car: ${b.car?.model || ''} (${b.car?.registrationNumber || 'allocated'}). Fare: ₹${b.totalFare?.toFixed(0)}${b.discount ? ' (' + b.discount + '% discount)' : ''}`;
         this.closeModals();
         this.loadBookings();
       },
@@ -297,23 +322,10 @@ export class EmployeeRentalsComponent implements OnInit {
 
     this.bookingService.returnCar(booking.bookingId!, returnData).subscribe({
       next: () => {
-        // If car was damaged, auto-create an emergency maintenance record
-        if (returnData.damaged && booking.car?.registrationNumber) {
-          const maintenanceDto: any = {
-            registrationNumber: booking.car.registrationNumber,
-            maintenanceType: 'EMERGENCY' as const,
-            status: 'IN_PROGRESS' as const,
-            scheduledDate: new Date().toISOString().split('T')[0],
-            description: returnData.damageNotes || 'Car returned with damage reported',
-            cost: 0,
-            performedBy: ''
-          };
-          this.maintenanceService.addEmergency(maintenanceDto).subscribe({
-            next: () => {},
-            error: () => {}
-          });
-        }
-        this.success = 'Car returned successfully!' + (returnData.damaged ? ' Emergency maintenance record created.' : '');
+        // Backend already auto-creates maintenance record — no duplicate needed
+        const carInfo = `${booking.car?.model || ''} (${booking.car?.registrationNumber || ''})`;
+        this.success = `Car ${carInfo} returned successfully! Booking #${booking.bookingId} completed.`
+          + (returnData.damaged ? ' Emergency maintenance record created automatically.' : '');
         this.closeModals();
         this.loadBookings();
       },
@@ -335,7 +347,11 @@ export class EmployeeRentalsComponent implements OnInit {
     if (v.model)     req.model     = v.model;
     if (v.category)  req.category  = v.category;
     this.bookingService.modifyBooking(this.selectedBooking.bookingId!, req).subscribe({
-      next: () => { this.success = 'Booking modified!'; this.closeModals(); this.loadBookings(); },
+      next: (b: any) => {
+        const carInfo = b?.car ? `${b.car.model} (${b.car.registrationNumber})` : 'car';
+        this.success = `Booking #${this.selectedBooking?.bookingId} modified! Allocated: ${carInfo}. New fare: ₹${b?.totalFare?.toFixed(0) || ''}`;
+        this.closeModals(); this.loadBookings();
+      },
       error: (err: any) => {
         this.submitting = false;
         const msg = AuthService.parseError(err);
@@ -351,7 +367,10 @@ export class EmployeeRentalsComponent implements OnInit {
   cancelBooking(b: Booking): void {
     if (!confirm(`Cancel booking #${b.bookingId}?`)) return;
     this.bookingService.cancelBooking(b.bookingId!).subscribe({
-      next: () => { this.success = 'Booking cancelled.'; this.loadBookings(); },
+      next: () => {
+        this.success = `Booking #${b.bookingId} cancelled. Car ${b.car?.model || ''} (${b.car?.registrationNumber || ''}) is now available.`;
+        this.loadBookings();
+      },
       error: (err: any) => this.error = AuthService.parseError(err)
     });
   }

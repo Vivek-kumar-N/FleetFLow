@@ -99,7 +99,6 @@ public class Booking {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "registration_number", referencedColumnName = "registration_number", nullable = false)
-    @JsonBackReference
     private Car car;
 
     
