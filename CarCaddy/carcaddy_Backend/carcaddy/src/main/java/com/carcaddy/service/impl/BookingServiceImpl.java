@@ -51,9 +51,12 @@ public class BookingServiceImpl implements IBookingService {
 
         log.info("Customer found: {}", customer.getCustomerId());
 
-        List<Car> cars = carRepository.findByModelAndStatus(
-                request.getModel(), CarStatus.AVAILABLE
-        );
+        // Fetch ALL cars of this model that are not in MAINTENANCE
+        // (RENTED cars may still be available for future dates)
+        List<Car> cars = carRepository.findByModel(request.getModel())
+                .stream()
+                .filter(c -> c.getStatus() != CarStatus.MAINTENANCE)
+                .collect(java.util.stream.Collectors.toList());
 
         log.info("Cars fetched: {}", cars.size());
 
@@ -176,9 +179,11 @@ public class BookingServiceImpl implements IBookingService {
 
             Car oldCar = booking.getCar();
 
-            List<Car> cars = carRepository.findByModelAndStatus(
-                    request.getModel(), CarStatus.AVAILABLE
-            );
+            // Fetch ALL non-maintenance cars of this model for date-based availability check
+            List<Car> cars = carRepository.findByModel(request.getModel())
+                    .stream()
+                    .filter(c -> c.getStatus() != CarStatus.MAINTENANCE)
+                    .collect(java.util.stream.Collectors.toList());
 
             if (cars.isEmpty()) {
                 throw new RuntimeException("No cars available for model");
