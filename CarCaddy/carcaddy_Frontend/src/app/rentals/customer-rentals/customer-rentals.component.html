@@ -149,18 +149,87 @@
           {{availabilityMsg}}
         </div>
 
-        <div *ngIf="loyaltyDiscount > 0" class="alert alert-success mt-2 mb-0">
-          <i class="bi bi-tag-fill me-1"></i>Your <strong>{{loyaltyDiscount}}% loyalty discount</strong> will be applied!
+        <!-- Loyalty Points Info -->
+        <div *ngIf="loyaltyPoints > 0" class="alert alert-warning mt-2 mb-0">
+          <i class="bi bi-star-fill me-1"></i>You have <strong>{{loyaltyPoints}} loyalty points</strong>.
+          <span *ngIf="loyaltyPoints >= 500"> Eligible for a <strong>free day rental</strong>!</span>
+          <span *ngIf="loyaltyPoints >= 100 && loyaltyPoints < 500"> Eligible for a <strong>5% discount</strong>!</span>
         </div>
         <div *ngIf="estimatedFare > 0" class="alert alert-info mt-2 mb-0">
           <i class="bi bi-calculator me-1"></i>Estimated Fare: <strong>₹{{estimatedFare | number:'1.0-0'}}</strong>
+          <span *ngIf="estimatedFareBase > estimatedFare" class="text-success ms-2">(saving ₹{{(estimatedFareBase - estimatedFare) | number:'1.0-0'}})</span>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeModals()">Cancel</button>
-        <button class="btn btn-primary" (click)="createBooking()" [disabled]="submitting || bookingForm.invalid">
+        <!-- If eligible for redemption, show redemption modal first; otherwise book directly -->
+        <button *ngIf="loyaltyPoints >= 100" class="btn btn-primary" (click)="openRedemptionModal()" [disabled]="submitting || bookingForm.invalid">
+          <i class="bi bi-star me-1"></i>Book with Loyalty
+        </button>
+        <button *ngIf="loyaltyPoints < 100" class="btn btn-primary" (click)="createBooking()" [disabled]="submitting || bookingForm.invalid">
           <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>Book Now
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loyalty Redemption Modal -->
+<div class="modal fade show d-block" *ngIf="showRedemptionModal" style="background:rgba(0,0,0,0.7)">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title"><i class="bi bi-star-fill me-2"></i>Redeem Loyalty Points</h5>
+        <button class="btn-close" (click)="showRedemptionModal = false"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">You have <strong>{{loyaltyPoints}} loyalty points</strong>. Choose how to use them:</p>
+        <div class="d-grid gap-3">
+          <!-- Free day rental option (500+ points) -->
+          <div class="card border-success" [ngClass]="{'opacity-50': loyaltyPoints < 500}">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="fw-bold text-success mb-1"><i class="bi bi-gift-fill me-2"></i>Free Day Rental</h6>
+                  <small class="text-muted">Deduct one day's rental rate from your fare</small>
+                  <div class="text-muted small">Requires 500 points — you have {{loyaltyPoints}}</div>
+                </div>
+                <button class="btn btn-success btn-sm" (click)="confirmRedemption('free')" [disabled]="loyaltyPoints < 500">
+                  Redeem
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- 5% discount option (100+ points) -->
+          <div class="card border-primary" [ngClass]="{'opacity-50': loyaltyPoints < 100}">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="fw-bold text-primary mb-1"><i class="bi bi-percent me-2"></i>5% Discount</h6>
+                  <small class="text-muted">Get 5% off your total fare</small>
+                  <div class="text-muted small">Requires 100 points — you have {{loyaltyPoints}}</div>
+                </div>
+                <button class="btn btn-primary btn-sm" (click)="confirmRedemption('discount')" [disabled]="loyaltyPoints < 100">
+                  Redeem
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- No redemption -->
+          <div class="card border-secondary">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="fw-bold text-secondary mb-1"><i class="bi bi-x-circle me-2"></i>No Redemption</h6>
+                  <small class="text-muted">Book at full price, keep your points</small>
+                </div>
+                <button class="btn btn-secondary btn-sm" (click)="confirmRedemption('none')">
+                  Skip
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

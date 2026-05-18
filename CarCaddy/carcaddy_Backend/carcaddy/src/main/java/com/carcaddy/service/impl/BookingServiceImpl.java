@@ -43,7 +43,8 @@ public class BookingServiceImpl implements IBookingService {
         log.info("CreateBooking API START");
 
         Customer customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new com.carcaddy.exception.InvalidEntityException(
+                        "Customer Id " + request.getCustomerId() + " is not found"));
 
         if (Boolean.TRUE.equals(customer.getBlacklisted())) {
             throw new RuntimeException("Customer is blacklisted: " + customer.getBlacklistReason());
@@ -88,7 +89,9 @@ public class BookingServiceImpl implements IBookingService {
         log.info("Final available cars: {}", availableCars.size());
 
         if (availableCars.isEmpty()) {
-            throw new RuntimeException("No available cars");
+            throw new RuntimeException("No available cars for model " + request.getModel()
+                + " between " + request.getStartDate() + " and " + request.getEndDate()
+                + ". Cars may be booked or scheduled for maintenance during this period.");
         }
 
         Car selectedCar = availableCars.get(new Random().nextInt(availableCars.size()));
@@ -142,7 +145,8 @@ public class BookingServiceImpl implements IBookingService {
         log.info("ModifyBooking START for bookingId {}", bookingId);
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new com.carcaddy.exception.InvalidEntityException(
+                        "Booking Id " + bookingId + " is not found"));
 
         if (booking.getBookingStatus() == BookingStatus.CANCELLED ||
             booking.getBookingStatus() == BookingStatus.COMPLETED) {
@@ -168,6 +172,16 @@ public class BookingServiceImpl implements IBookingService {
 
         if (!conflicts.isEmpty()) {
             throw new RuntimeException("Dates not available");
+        }
+
+        // Also check for maintenance conflicts on the same car for the new dates
+        List<Maintenance> maintenanceConflicts = maintenanceRepository.findMaintenanceOverlapping(
+                booking.getCar().getRegistrationNumber(), newStart, newEnd
+        );
+        if (!maintenanceConflicts.isEmpty()) {
+            throw new RuntimeException("Car " + booking.getCar().getRegistrationNumber()
+                + " has maintenance scheduled between " + newStart + " and " + newEnd
+                + ". Please choose different dates.");
         }
 
         booking.setStartDate(newStart);
@@ -198,7 +212,9 @@ public class BookingServiceImpl implements IBookingService {
             }
 
             if (availableCars.isEmpty()) {
-                throw new RuntimeException("No cars available after filtering");
+                throw new RuntimeException("No cars available for model " + request.getModel()
+                    + " between " + newStart + " and " + newEnd
+                    + ". Cars may be booked or scheduled for maintenance during this period.");
             }
 
             Car newCar = availableCars.get(new Random().nextInt(availableCars.size()));
@@ -247,7 +263,8 @@ public class BookingServiceImpl implements IBookingService {
         log.info("CancelBooking for bookingId {}", bookingId);
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Not found"));
+                .orElseThrow(() -> new com.carcaddy.exception.InvalidEntityException(
+                        "Booking Id " + bookingId + " is not found"));
 
         booking.setBookingStatus(BookingStatus.CANCELLED);
 
@@ -269,7 +286,8 @@ public class BookingServiceImpl implements IBookingService {
         log.info("ReturnCar API for bookingId {}", bookingId);
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Not found"));
+                .orElseThrow(() -> new com.carcaddy.exception.InvalidEntityException(
+                        "Booking Id " + bookingId + " is not found"));
 
         booking.setBookingStatus(BookingStatus.COMPLETED);
         booking.setReturnDate(LocalDate.now());
@@ -333,7 +351,13 @@ public class BookingServiceImpl implements IBookingService {
     // ✅ 5. CHECK AVAILABILITY
     @Override
     public boolean checkCarAvailability(String regNo, LocalDate start, LocalDate end) {
-        return bookingRepository.findOverlappingBookings(regNo, start, end).isEmpty();
+        // Check 1: No overlapping bookings
+        boolean noBookingConflict = bookingRepository.findOverlappingBookings(regNo, start, end).isEmpty();
+        if (!noBookingConflict) return false;
+
+        // Check 2: No maintenance scheduled during the booking period
+        boolean noMaintenanceConflict = maintenanceRepository.findMaintenanceOverlapping(regNo, start, end).isEmpty();
+        return noMaintenanceConflict;
     }
 
     // ✅ VIEW METHODS
@@ -348,7 +372,8 @@ public class BookingServiceImpl implements IBookingService {
     public Booking getBookingById(Long id) {
         log.info("Fetching booking by ID {}", id);
         return bookingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Not found"));
+                .orElseThrow(() -> new com.carcaddy.exception.InvalidEntityException(
+                        "Booking Id " + id + " is not found"));
     }
 
     @Override

@@ -20,10 +20,13 @@ public class Maintenance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long maintenanceId;
 
+    @NotNull(message = "Maintenance type is required")
     @Enumerated(EnumType.STRING)
     private MaintenanceType maintenanceType;
 
+    @NotNull(message = "Scheduled date is required")
     private LocalDate scheduledDate;
+
     private LocalDate completedDate;
 
     private String description;
@@ -33,6 +36,7 @@ public class Maintenance {
 
     private String performedBy;
 
+    @NotNull(message = "Status is required")
     @Enumerated(EnumType.STRING)
     private MaintenanceStatus status;
 

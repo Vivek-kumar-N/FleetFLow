@@ -19,7 +19,7 @@ export class BookingService {
   }
 
   cancelBooking(bookingId: number): Observable<string> {
-    return this.http.delete<string>(`${this.apiUrl}/${bookingId}`);
+    return this.http.delete(`${this.apiUrl}/${bookingId}`, { responseType: 'text' });
   }
 
   returnCar(bookingId: number, request: ReturnCarRequest): Observable<Booking> {

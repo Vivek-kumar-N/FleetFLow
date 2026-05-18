@@ -38,15 +38,21 @@ export class CustomerRentalsComponent implements OnInit {
   availableCars: Car[] = [];
   customerId = '';
   loyaltyDiscount = 0;
+  loyaltyPoints = 0;
   loading = true;
   error = '';
   success = '';
   activeTab = 'active';
   estimatedFare = 0;
+  estimatedFareBase = 0;
   submitting = false;
   selectedBooking: Booking | null = null;
   isBlacklisted = false;
   blacklistReason = '';
+
+  // Loyalty redemption
+  showRedemptionModal = false;
+  selectedRedemption: 'none' | 'discount' | 'free' = 'none';
 
   // Availability check state
   availabilityMsg = '';
@@ -98,6 +104,7 @@ export class CustomerRentalsComponent implements OnInit {
         this.customerId = customer.customerId!;
         this.isBlacklisted = customer.blacklisted || false;
         this.blacklistReason = customer.blacklistReason || '';
+        this.loyaltyPoints = customer.loyaltyPoints || 0;
         this.loadBookings();
         this.customerService.getLoyaltyDiscount(this.customerId).subscribe({
           next: (d: any) => { this.loyaltyDiscount = d.discountPercent || 0; },
@@ -125,8 +132,8 @@ export class CustomerRentalsComponent implements OnInit {
 
   calculateFare(): void {
     const { startDate, endDate, model } = this.bookingForm.value;
-    if (!startDate || !endDate || !model) { this.estimatedFare = 0; return; }
-    if (new Date(endDate) <= new Date(startDate)) { this.estimatedFare = 0; return; }
+    if (!startDate || !endDate || !model) { this.estimatedFare = 0; this.estimatedFareBase = 0; return; }
+    if (new Date(endDate) <= new Date(startDate)) { this.estimatedFare = 0; this.estimatedFareBase = 0; return; }
 
     const days = Math.max(1, Math.ceil(
       (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000
@@ -135,15 +142,27 @@ export class CustomerRentalsComponent implements OnInit {
     // Fetch actual rate from the car with this model
     this.carService.getCarsByModel(model).subscribe({
       next: (cars) => {
-        if (cars.length === 0) { this.estimatedFare = 0; return; }
-        // Use the first car's rate (all cars of same model should have same rate)
+        if (cars.length === 0) { this.estimatedFare = 0; this.estimatedFareBase = 0; return; }
         const rate = cars[0].rentalRatePerDay || 0;
-        if (rate === 0) { this.estimatedFare = 0; return; }
-        const base = days * rate;
-        this.estimatedFare = base - (base * this.loyaltyDiscount / 100);
+        if (rate === 0) { this.estimatedFare = 0; this.estimatedFareBase = 0; return; }
+        this.estimatedFareBase = days * rate;
+        this.applyRedemptionToFare(rate);
       },
-      error: () => { this.estimatedFare = 0; }
+      error: () => { this.estimatedFare = 0; this.estimatedFareBase = 0; }
     });
+  }
+
+  applyRedemptionToFare(ratePerDay?: number): void {
+    if (this.estimatedFareBase === 0) return;
+    if (this.selectedRedemption === 'free' && this.loyaltyPoints >= 500) {
+      // Free day rental — subtract one day's rate
+      const rate = ratePerDay || (this.estimatedFareBase / Math.max(1, this.estimatedFareBase));
+      this.estimatedFare = Math.max(0, this.estimatedFareBase - rate);
+    } else if (this.selectedRedemption === 'discount' && this.loyaltyPoints >= 100) {
+      this.estimatedFare = this.estimatedFareBase * 0.95; // 5% discount
+    } else {
+      this.estimatedFare = this.estimatedFareBase;
+    }
   }
 
   /** Called when user clicks "Check Availability" or on date/model blur */
@@ -220,11 +239,25 @@ export class CustomerRentalsComponent implements OnInit {
     }
     this.bookingForm.reset({ category: 'Sedan', passengerCount: 1 });
     this.estimatedFare = 0;
+    this.estimatedFareBase = 0;
+    this.selectedRedemption = 'none';
     this.availabilityMsg = '';
     this.availabilityOk = null;
     this.showCreateModal = true;
     this.error = '';
     this.success = '';
+  }
+
+  openRedemptionModal(): void {
+    if (this.bookingForm.invalid) { this.bookingForm.markAllAsTouched(); return; }
+    this.showRedemptionModal = true;
+  }
+
+  confirmRedemption(choice: 'none' | 'discount' | 'free'): void {
+    this.selectedRedemption = choice;
+    this.showRedemptionModal = false;
+    this.applyRedemptionToFare();
+    this.createBooking();
   }
 
   openModifyModal(b: Booking): void {
@@ -238,6 +271,7 @@ export class CustomerRentalsComponent implements OnInit {
   closeModals(): void {
     this.showCreateModal = false;
     this.showModifyModal = false;
+    this.showRedemptionModal = false;
     this.selectedBooking = null;
     this.submitting = false;
     this.availabilityMsg = '';

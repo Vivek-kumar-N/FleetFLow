@@ -110,30 +110,28 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
                 "Scheduled date cannot be in the past. Please select today or a future date.");
         }
 
-        // Rule 2: Car must not be currently booked on the scheduled date
+        // Rule 2: Maintenance can only be scheduled STRICTLY AFTER all active bookings end
+        // (not on the same day as booking end date, and not during any active booking)
         if (dto.getScheduledDate() != null) {
-            List<Booking> overlapping = bookingRepository.findOverlappingBookings(
-                    dto.getRegistrationNumber(),
-                    dto.getScheduledDate(),
-                    dto.getScheduledDate()
-            );
-            boolean hasActiveBooking = overlapping.stream().anyMatch(b ->
-                    b.getBookingStatus() == BookingStatus.CONFIRMED ||
-                    b.getBookingStatus() == BookingStatus.ACTIVE ||
-                    b.getBookingStatus() == BookingStatus.MODIFIED
-            );
-            if (hasActiveBooking) {
-                // Find the booking end date to inform the user
-                Booking activeBooking = overlapping.stream()
-                        .filter(b -> b.getBookingStatus() == BookingStatus.CONFIRMED ||
-                                     b.getBookingStatus() == BookingStatus.ACTIVE ||
-                                     b.getBookingStatus() == BookingStatus.MODIFIED)
-                        .findFirst().orElse(null);
-                String returnDate = activeBooking != null
-                        ? activeBooking.getEndDate().toString() : "unknown";
-                throw new InvalidEntityException(
-                    "Car " + dto.getRegistrationNumber() + " is currently booked until " + returnDate +
-                    ". Maintenance can only be scheduled after the car is returned.");
+
+            // Check if any active booking overlaps with or ends on the scheduled date
+            List<Booking> allBookings = bookingRepository.findByCar_RegistrationNumber(dto.getRegistrationNumber());
+
+            for (Booking b : allBookings) {
+                if (b.getBookingStatus() != BookingStatus.CONFIRMED &&
+                    b.getBookingStatus() != BookingStatus.ACTIVE &&
+                    b.getBookingStatus() != BookingStatus.MODIFIED) {
+                    continue; // skip cancelled/completed bookings
+                }
+
+                LocalDate bookingEnd = b.getEndDate();
+
+                // Maintenance date must be strictly AFTER booking end date (not same day)
+                if (!dto.getScheduledDate().isAfter(bookingEnd)) {
+                    throw new InvalidEntityException(
+                        "Car " + dto.getRegistrationNumber() + " has an active booking until " + bookingEnd +
+                        ". Maintenance can only be scheduled from " + bookingEnd.plusDays(1) + " onwards.");
+                }
             }
         }
 
@@ -146,6 +144,30 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
     public MaintenanceDto scheduleRoutineMaintenance(MaintenanceDto dto) {
     
         log.info("Scheduling routine maintenance for car: {}", dto.getRegistrationNumber());
+
+        // Rule 1: Scheduled date must not be in the past
+        if (dto.getScheduledDate() != null && dto.getScheduledDate().isBefore(LocalDate.now())) {
+            throw new InvalidEntityException(
+                "Scheduled date cannot be in the past. Please select today or a future date.");
+        }
+
+        // Rule 2: Maintenance can only be scheduled STRICTLY AFTER all active bookings end
+        if (dto.getScheduledDate() != null) {
+            List<Booking> allBookings = bookingRepository.findByCar_RegistrationNumber(dto.getRegistrationNumber());
+            for (Booking b : allBookings) {
+                if (b.getBookingStatus() != BookingStatus.CONFIRMED &&
+                    b.getBookingStatus() != BookingStatus.ACTIVE &&
+                    b.getBookingStatus() != BookingStatus.MODIFIED) {
+                    continue;
+                }
+                LocalDate bookingEnd = b.getEndDate();
+                if (!dto.getScheduledDate().isAfter(bookingEnd)) {
+                    throw new InvalidEntityException(
+                        "Car " + dto.getRegistrationNumber() + " has an active booking until " + bookingEnd +
+                        ". Maintenance can only be scheduled from " + bookingEnd.plusDays(1) + " onwards.");
+                }
+            }
+        }
     
         Car car = getCarOrThrow(dto.getRegistrationNumber());
     
@@ -165,7 +187,6 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
             usageDue = car.getRentalCount() >= 20;
         }
     
-        
         if (!(mileageDue || timeDue || usageDue)) {
             log.info("No conditions met, but scheduling routine maintenance anyway");
         }
@@ -173,11 +194,10 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
         dto.setMaintenanceType(MaintenanceType.ROUTINE);
         dto.setStatus(MaintenanceStatus.SCHEDULED);
     
-        //  update car status
+        // update car status
         car.setStatus(CarStatus.MAINTENANCE);
         carRepository.save(car);
     
-        
         Maintenance m = convertToEntity(dto, car);
     
         return convertToDTO(repo.save(m));

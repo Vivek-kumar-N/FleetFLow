@@ -27,4 +27,22 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, Long> 
 
     @Query("SELECT m FROM Maintenance m WHERE m.scheduledDate < CURRENT_DATE AND m.status != 'COMPLETED'")
     List<Maintenance> findOverdue();
+
+    /**
+     * Find active (non-completed, non-cancelled) maintenance records for a car
+     * whose scheduled date falls within the given booking date range.
+     * A booking cannot be created if maintenance is scheduled during that period.
+     */
+    @Query("""
+        SELECT m FROM Maintenance m
+        WHERE m.car.registrationNumber = :reg
+        AND m.status NOT IN ('COMPLETED', 'CANCELLED')
+        AND m.scheduledDate >= :startDate
+        AND m.scheduledDate <= :endDate
+    """)
+    List<Maintenance> findMaintenanceOverlapping(
+            @Param("reg") String regNumber,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 }
