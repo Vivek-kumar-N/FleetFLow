@@ -112,7 +112,15 @@ export class AdminEmployeesComponent implements OnInit {
 
   autoDeactivate(): void {
     this.employeeService.autoDeactivate().subscribe({
-      next: () => { this.success = 'Expired accounts deactivated and notified.'; this.loadEmployees(); },
+      next: (deactivated: any[]) => {
+        if (deactivated && deactivated.length > 0) {
+          const names = deactivated.map((e: any) => `${e.employeeName} (${e.emailId})`).join(', ');
+          this.success = `${deactivated.length} account(s) deactivated and notified via email: ${names}`;
+        } else {
+          this.success = 'No expired accounts found. All accounts are up to date.';
+        }
+        this.loadEmployees();
+      },
       error: (err: any) => { this.error = AuthService.parseError(err); }
     });
   }

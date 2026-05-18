@@ -55,4 +55,8 @@ export class CarService {
   getCarsRequiringMaintenance(): Observable<Car[]> {
     return this.http.get<Car[]>(`${this.apiUrl}/maintenance`);
   }
+
+  deleteCar(registrationNumber: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${registrationNumber}`);
+  }
 }

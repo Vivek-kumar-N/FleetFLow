@@ -36,28 +36,33 @@
 
   <!-- REVENUE TAB -->
   <div *ngIf="!loading && activeTab === 'revenue'">
-    <div class="row g-3">
-      <div class="col-md-4">
+    <div class="row g-3 mb-3">
+      <div class="col-md-3">
         <div class="card text-center p-4">
           <div class="report-value text-success" style="font-size:2rem;font-weight:700">₹{{revenue | number:'1.0-0'}}</div>
           <div class="text-muted mt-1">Total Revenue</div>
           <small class="text-muted">{{startDate | date:'dd MMM yyyy'}} – {{endDate | date:'dd MMM yyyy'}}</small>
         </div>
       </div>
-      <div class="col-md-8">
+      <div class="col-md-9">
         <div class="card">
           <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-            Income by Car Model
+            <span><i class="bi bi-bar-chart-fill me-2 text-success"></i>Income by Car Model — Bar Chart</span>
             <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV('revenue')"><i class="bi bi-download me-1"></i>CSV</button>
           </div>
           <div class="card-body">
-            <div *ngFor="let e of incomeEntries" class="mb-2">
-              <div class="d-flex justify-content-between mb-1"><span class="small">{{e[0]}}</span><span class="small fw-bold text-success">₹{{e[1] | number:'1.0-0'}}</span></div>
-              <div class="progress" style="height:10px"><div class="progress-bar bg-success" [style.width.%]="getPercent(e[1], incomeEntries)"></div></div>
-            </div>
+            <canvas #incomeByModelChart style="max-height:260px"></canvas>
             <p *ngIf="incomeEntries.length === 0" class="text-muted text-center">No revenue data for this period</p>
           </div>
         </div>
+      </div>
+    </div>
+    <!-- Revenue over time — Line Chart -->
+    <div class="card">
+      <div class="card-header fw-bold"><i class="bi bi-graph-up me-2 text-primary"></i>Revenue Trend Over Time — Line Chart</div>
+      <div class="card-body">
+        <canvas #revenuePeriodLineChart style="max-height:260px"></canvas>
+        <p *ngIf="revenueByMonthEntries.length === 0" class="text-muted text-center py-3">No revenue trend data for this period. Apply a date range and click Apply.</p>
       </div>
     </div>
   </div>
@@ -154,31 +159,62 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-            Customers with Maximum Bookings
+            <span>Customers with Maximum Bookings — Ranked</span>
             <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV('customers')"><i class="bi bi-download me-1"></i>CSV</button>
           </div>
           <div class="card-body p-0">
             <table class="table table-hover mb-0">
-              <thead class="table-light"><tr><th>#</th><th>Customer</th><th>Email</th><th>Loyalty Pts</th></tr></thead>
+              <thead class="table-light"><tr><th>#</th><th>Customer</th><th>Email</th><th>Bookings</th><th>Loyalty Pts</th></tr></thead>
               <tbody>
                 <tr *ngFor="let c of topCustomers; let i = index">
-                  <td><span class="badge bg-primary">{{i+1}}</span></td><td>{{c.customerName}}</td>
+                  <td><span class="badge bg-primary">{{i+1}}</span></td>
+                  <td class="fw-semibold">{{c.customerName}}</td>
                   <td class="text-muted small">{{c.emailId}}</td>
+                  <td><span class="badge bg-info text-dark">{{c.bookingCount || c.totalBookings || '-'}}</span></td>
                   <td><span class="badge bg-warning text-dark">{{c.loyaltyPoints || 0}}</span></td>
                 </tr>
-                <tr *ngIf="topCustomers.length === 0"><td colspan="4" class="text-center text-muted py-3">No data</td></tr>
+                <tr *ngIf="topCustomers.length === 0"><td colspan="5" class="text-center text-muted py-3">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Cars with Minimal Bookings — sortable table -->
+        <div class="card mt-3">
+          <div class="card-header fw-bold">Cars with Minimal Bookings — Ranked</div>
+          <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th style="cursor:pointer" (click)="sortMinimal('reg')">Reg No. <i class="bi bi-arrow-down-up"></i></th>
+                  <th style="cursor:pointer" (click)="sortMinimal('count')">Bookings <i class="bi bi-arrow-down-up"></i></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let e of sortedMinimalEntries; let i = index">
+                  <td><span class="badge bg-secondary">{{i+1}}</span></td>
+                  <td class="fw-semibold">{{e[0]}}</td>
+                  <td><span class="badge bg-warning text-dark">{{e[1]}} bookings</span></td>
+                </tr>
+                <tr *ngIf="sortedMinimalEntries.length === 0"><td colspan="3" class="text-center text-muted py-3">No data</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
       <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-header fw-bold"><i class="bi bi-pie-chart-fill me-2 text-warning"></i>Customer Loyalty Tier Distribution — Pie Chart</div>
+          <div class="card-body text-center">
+            <canvas #loyaltyPieChart style="max-height:220px"></canvas>
+          </div>
+        </div>
         <div class="card">
-          <div class="card-header fw-bold">Customer Loyalty Analytics</div>
+          <div class="card-header fw-bold">Loyalty Analytics Summary</div>
           <div class="card-body">
             <div class="d-flex justify-content-between mb-2"><span>Total Points Issued</span><span class="fw-bold text-primary">{{loyaltyAnalytics?.totalPointsIssued || 0}}</span></div>
             <div class="d-flex justify-content-between mb-2"><span>Avg Points / Customer</span><span class="fw-bold">{{loyaltyAnalytics?.averageLoyaltyPoints || 0 | number:'1.0-1'}}</span></div>
-            <div class="d-flex justify-content-between mb-2"><span>Eligible for Free Rental</span><span class="fw-bold text-success">{{loyaltyAnalytics?.customersEligibleForFreeRental || 0}}</span></div>
+            <div class="d-flex justify-content-between mb-2"><span>Eligible for Free Rental (500+ pts)</span><span class="fw-bold text-success">{{loyaltyAnalytics?.customersEligibleForFreeRental || 0}}</span></div>
             <div class="d-flex justify-content-between mb-2"><span>Top Customer Points</span><span class="fw-bold text-warning">{{loyaltyAnalytics?.topCustomerPoints || 0}}</span></div>
             <div class="d-flex justify-content-between mb-2"><span>Total Customers</span><span class="fw-bold">{{loyaltyAnalytics?.totalCustomers || 0}}</span></div>
           </div>
@@ -204,7 +240,16 @@
       </div>
       <div class="col-md-6">
         <div class="card">
-          <div class="card-header fw-bold">Maintenance Cost by Period</div>
+          <div class="card-header fw-bold"><i class="bi bi-graph-down me-2 text-danger"></i>Maintenance Cost by Time Period — Bar Chart</div>
+          <div class="card-body">
+            <canvas #maintenanceCostPeriodChart style="max-height:250px"></canvas>
+            <p *ngIf="maintenanceCostPeriodEntries.length === 0" class="text-muted text-center">No data for this period</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header fw-bold">Maintenance Cost Breakdown by Period</div>
           <div class="card-body">
             <div *ngFor="let e of maintenanceCostPeriodEntries" class="mb-2">
               <div class="d-flex justify-content-between mb-1"><span class="small">{{e[0]}}</span><span class="small fw-bold text-danger">₹{{e[1] | number:'1.0-0'}}</span></div>
