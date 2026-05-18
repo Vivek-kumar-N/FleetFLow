@@ -17,6 +17,8 @@ public interface ICarService {
 
     Car updateMileageAfterRental(String registrationNumber, Double newMileage);
 
+    void deleteCar(String registrationNumber);
+
     /* -------- Fetch -------- */
     List<Car> getAllCars();
 

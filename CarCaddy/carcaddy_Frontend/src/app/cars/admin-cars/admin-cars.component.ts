@@ -13,6 +13,7 @@ import { Car, Maintenance } from '../../models/models';
 export class AdminCarsComponent implements OnInit {
   cars: Car[] = [];
   filteredCars: Car[] = [];
+  carsNeedingMaintenance: Set<string> = new Set();
   loading = false;
   error = '';
   success = '';
@@ -25,11 +26,17 @@ export class AdminCarsComponent implements OnInit {
   showStatusModal = false;
   showMileageModal = false;
   showMaintenanceHistoryModal = false;
+  showDeleteModal = false;
+  showDetailModal = false;
   selectedCar: Car | null = null;
   submitting = false;
   carMaintenanceHistory: Maintenance[] = [];
   carTotalMaintenanceCost = 0;
   loadingHistory = false;
+
+  // Sorting
+  sortField = '';
+  sortDir: 'asc' | 'desc' = 'asc';
 
   carForm: FormGroup;
   statusForm: FormGroup;
@@ -63,16 +70,38 @@ export class AdminCarsComponent implements OnInit {
       next: d => { this.cars = d; this.applyFilters(); this.loading = false; },
       error: () => { this.loading = false; this.error = 'Failed to load cars.'; }
     });
+    // Load cars needing maintenance for the filter
+    this.carService.getCarsRequiringMaintenance().subscribe({
+      next: d => { this.carsNeedingMaintenance = new Set(d.map((c: Car) => c.registrationNumber)); },
+      error: () => {}
+    });
   }
 
   applyFilters(): void {
-    this.filteredCars = this.cars.filter(c => {
+    let result = this.cars.filter(c => {
       const s = this.searchTerm.toLowerCase();
       const matchSearch = !s || c.registrationNumber.toLowerCase().includes(s) || c.model.toLowerCase().includes(s);
-      const matchStatus = !this.statusFilter || c.status === this.statusFilter;
+      // Special filter: REQUIRES_MAINTENANCE shows cars due for service (by business rules)
+      const matchStatus = !this.statusFilter
+        ? true
+        : this.statusFilter === 'REQUIRES_MAINTENANCE'
+          ? this.carsNeedingMaintenance.has(c.registrationNumber)
+          : c.status === this.statusFilter;
       const matchCat = !this.categoryFilter || c.category === this.categoryFilter;
       return matchSearch && matchStatus && matchCat;
     });
+
+    // Sorting
+    if (this.sortField) {
+      result = result.sort((a: any, b: any) => {
+        const aVal = a[this.sortField] ?? '';
+        const bVal = b[this.sortField] ?? '';
+        const cmp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
+        return this.sortDir === 'asc' ? cmp : -cmp;
+      });
+    }
+
+    this.filteredCars = result;
   }
 
   openAddModal(): void { this.carForm.reset({ category: 'Sedan', carCondition: 'Excellent', status: 'AVAILABLE', mileage: 0, rentalRatePerDay: 50 }); this.carForm.get('registrationNumber')?.enable(); this.showAddModal = true; this.error = ''; this.success = ''; }
@@ -96,7 +125,30 @@ export class AdminCarsComponent implements OnInit {
     });
   }
 
-  closeModals(): void { this.showAddModal = false; this.showEditModal = false; this.showStatusModal = false; this.showMileageModal = false; this.showMaintenanceHistoryModal = false; this.selectedCar = null; this.carForm.get('registrationNumber')?.enable(); this.submitting = false; }
+  openDeleteModal(car: Car): void { this.selectedCar = car; this.showDeleteModal = true; }
+
+  openDetailModal(car: Car): void { this.selectedCar = car; this.showDetailModal = true; }
+
+  deleteCar(): void {
+    if (!this.selectedCar) return;
+    this.submitting = true;
+    this.carService.deleteCar(this.selectedCar.registrationNumber).subscribe({
+      next: () => { this.success = `Car ${this.selectedCar?.registrationNumber} deleted successfully.`; this.closeModals(); this.loadCars(); },
+      error: (err: any) => { this.submitting = false; this.error = AuthService.parseError(err); }
+    });
+  }
+
+  sortBy(field: string): void {
+    if (this.sortField === field) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortField = field;
+      this.sortDir = 'asc';
+    }
+    this.applyFilters();
+  }
+
+  closeModals(): void { this.showAddModal = false; this.showEditModal = false; this.showStatusModal = false; this.showMileageModal = false; this.showMaintenanceHistoryModal = false; this.showDeleteModal = false; this.showDetailModal = false; this.selectedCar = null; this.carForm.get('registrationNumber')?.enable(); this.submitting = false; }
 
   submitCar(): void {
     if (this.carForm.invalid) { this.carForm.markAllAsTouched(); return; }
