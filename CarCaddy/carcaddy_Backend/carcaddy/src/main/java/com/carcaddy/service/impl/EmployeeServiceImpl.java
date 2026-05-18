@@ -133,15 +133,23 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setExpiryDate(expiryDate);
 
         if (expiryDate.isBefore(LocalDate.now())) {
+            // Expiry is in the past → deactivate
             employee.setAccountActive(false);
             employee.setFirstLogin(false);
+            logger.info("Employee {} deactivated — expiry date {} is in the past", employeeId, expiryDate);
+        } else {
+            // Expiry is today or in the future → reactivate if currently inactive
+            if (Boolean.FALSE.equals(employee.getAccountActive())) {
+                employee.setAccountActive(true);
+                logger.info("Employee {} reactivated — new expiry date {} is in the future", employeeId, expiryDate);
+            }
         }
 
         return employeeRepository.save(employee);
     }
 
     @Override
-    public void autoDeactivateExpiredEmployees() {
+    public List<Employee> autoDeactivateExpiredEmployees() {
 
         List<Employee> expiredEmployees =
                 employeeRepository.findByExpiryDateBeforeAndAccountActive(
@@ -157,5 +165,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                     employee.getEmployeeName()
             );
         }
+
+        return expiredEmployees;
     }
 }

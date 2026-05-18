@@ -1,5 +1,5 @@
 
-    package com.carcaddy.service;
+package com.carcaddy.service;
 
 import com.carcaddy.entity.Employee;
 
@@ -32,8 +32,8 @@ public interface EmployeeService {
     // Set expiry date for temporary employee
     Employee setExpiryDate(Long employeeId, LocalDate expiryDate);
 
-    // Auto‑deactivate expired temporary employees
-    void autoDeactivateExpiredEmployees();
+    // Auto‑deactivate expired temporary employees and return the list
+    List<Employee> autoDeactivateExpiredEmployees();
 }
 
 

@@ -27,7 +27,7 @@ public class EmployeeController {
 
     @PostMapping
     public ResponseEntity<Employee> addEmployee(
-            @RequestBody Employee employee) {
+            @Valid @RequestBody Employee employee) {
 
         logger.info("Add employee request received");
         Employee savedEmployee = employeeService.addEmployee(employee);
@@ -94,8 +94,8 @@ public class EmployeeController {
     }
 
     @PutMapping("/auto-deactivate")
-    public ResponseEntity<String> autoDeactivate() {
-        employeeService.autoDeactivateExpiredEmployees();
-        return ResponseEntity.ok("Expired accounts deactivated successfully");
+    public ResponseEntity<List<Employee>> autoDeactivate() {
+        List<Employee> deactivated = employeeService.autoDeactivateExpiredEmployees();
+        return ResponseEntity.ok(deactivated);
     }
 }
