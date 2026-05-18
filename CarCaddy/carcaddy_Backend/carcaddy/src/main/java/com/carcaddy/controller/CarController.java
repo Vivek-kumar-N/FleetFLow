@@ -138,4 +138,15 @@ public class CarController {
 
         return carService.getCarsRequiringMaintenance();
     }
+
+    /* ---------------- DELETE ---------------- */
+
+    @DeleteMapping("/{registrationNumber}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCar(@PathVariable String registrationNumber) {
+
+        log.info("API request: Delete car {}", registrationNumber);
+
+        carService.deleteCar(registrationNumber);
+    }
 }

@@ -134,20 +134,12 @@
           </div>
         </div>
       </div>
-      <!-- Revenue by Model -->
+      <!-- Revenue by Model — Chart.js Bar Chart -->
       <div class="col-md-6">
         <div class="card">
-          <div class="card-header fw-bold"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Revenue by Car Model</div>
+          <div class="card-header fw-bold"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Revenue by Car Model — Bar Chart</div>
           <div class="card-body">
-            <div *ngFor="let entry of incomeEntries" class="mb-2">
-              <div class="d-flex justify-content-between mb-1">
-                <span class="small">{{entry[0]}}</span>
-                <span class="small fw-bold">₹{{entry[1] | number:'1.0-0'}}</span>
-              </div>
-              <div class="progress" style="height:8px">
-                <div class="progress-bar bg-primary" [style.width.%]="getPercent(entry[1], incomeEntries)"></div>
-              </div>
-            </div>
+            <canvas #incomeBarChart style="max-height:260px"></canvas>
             <p *ngIf="incomeEntries.length === 0" class="text-muted text-center">No revenue data</p>
           </div>
         </div>
@@ -172,20 +164,12 @@
         </div>
       </div>
 
-      <!-- Car Utilization -->
+      <!-- Car Utilization — Chart.js Bar Chart -->
       <div class="col-md-6">
         <div class="card">
-          <div class="card-header fw-bold"><i class="bi bi-pie-chart-fill text-info me-2"></i>Car Utilization</div>
+          <div class="card-header fw-bold"><i class="bi bi-bar-chart-fill text-info me-2"></i>Car Utilization — Bar Chart</div>
           <div class="card-body">
-            <div *ngFor="let entry of utilizationEntries" class="mb-2">
-              <div class="d-flex justify-content-between mb-1">
-                <span class="small">{{entry[0]}}</span>
-                <span class="small fw-bold">{{entry[1]}} rentals</span>
-              </div>
-              <div class="progress" style="height:8px">
-                <div class="progress-bar bg-info" [style.width.%]="getPercent(entry[1], utilizationEntries)"></div>
-              </div>
-            </div>
+            <canvas #utilizationBarChart style="max-height:260px"></canvas>
             <p *ngIf="utilizationEntries.length === 0" class="text-muted text-center">No utilization data</p>
           </div>
         </div>

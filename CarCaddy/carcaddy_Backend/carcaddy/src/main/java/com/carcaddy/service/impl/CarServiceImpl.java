@@ -157,6 +157,17 @@ public class CarServiceImpl implements ICarService {
                 .toList();
     }
 
+    /* ---------------- DELETE ---------------- */
+    @Override
+    public void deleteCar(String registrationNumber) {
+        log.info("Request received to delete car: {}", registrationNumber);
+        if (!carRepository.existsById(registrationNumber)) {
+            throw new InvalidEntityException("Car with Registration Number " + registrationNumber + " not found");
+        }
+        carRepository.deleteById(registrationNumber);
+        log.info("Car {} deleted successfully", registrationNumber);
+    }
+
     /* ---------------- BUSINESS RULES ---------------- */
     @Override
     public boolean needsMaintenance(Car car) {
