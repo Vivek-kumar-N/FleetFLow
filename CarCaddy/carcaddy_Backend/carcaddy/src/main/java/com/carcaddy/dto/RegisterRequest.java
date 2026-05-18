@@ -14,8 +14,8 @@ public class RegisterRequest {
     private String securityQuestion;
     private String securityAnswer;
 
-    //for customer
-
+    // Required only when role = ROLE_CUSTOMER
+    // These are used to auto-create and link a Customer profile on registration
     private String customerName;
     private String emailId;
     private String contactNumber;
@@ -23,4 +23,3 @@ public class RegisterRequest {
     private String address;
     private String occupation;
 }
-

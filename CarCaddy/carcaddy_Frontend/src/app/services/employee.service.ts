@@ -48,9 +48,7 @@ export class EmployeeService {
     });
   }
 
- autoDeactivate(): Observable<string> { // Changed to Observable<string>
-    return this.http.put(`${this.apiUrl}/auto-deactivate`, null, { 
-      responseType: 'text' 
-    });
+ autoDeactivate(): Observable<any[]> {
+    return this.http.put<any[]>(`${this.apiUrl}/auto-deactivate`, null);
   }
 }

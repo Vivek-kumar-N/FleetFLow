@@ -21,9 +21,18 @@
       </div>
     </div>
 
-    <!-- Car Utilization -->
+    <!-- Car Utilization Chart.js Bar Chart -->
+    <div class="card mb-4">
+      <div class="card-header fw-bold"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Car Utilization — Bar Chart</div>
+      <div class="card-body">
+        <canvas #utilizationChart style="max-height:350px"></canvas>
+        <p *ngIf="utilizationEntries.length === 0" class="text-muted text-center py-3">No utilization data available</p>
+      </div>
+    </div>
+
+    <!-- Car Utilization Table -->
     <div class="card">
-      <div class="card-header fw-bold"><i class="bi bi-pie-chart me-2 text-info"></i>Car Utilization Report</div>
+      <div class="card-header fw-bold"><i class="bi bi-table me-2 text-info"></i>Car Utilization Report — Details</div>
       <div class="card-body">
         <div *ngFor="let e of utilizationEntries" class="mb-3">
           <div class="d-flex justify-content-between mb-1">
