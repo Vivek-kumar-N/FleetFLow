@@ -1,0 +1,1113 @@
+{
+  "info": {
+    "name": "FleetFlow API Tests",
+    "_postman_id": "FleetFlow-api-collection-v2",
+    "description": "Complete API test collection for FleetFlow Fleet Management System with correct sample data",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "adminToken", "value": "" },
+    { "key": "employeeToken", "value": "" },
+    { "key": "customerToken", "value": "" },
+    { "key": "bookingId", "value": "1" },
+    { "key": "cancelBookingId", "value": "2" }
+  ],
+  "item": [
+    {
+      "name": "1. AUTH",
+      "item": [
+        {
+          "name": "1.1 Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin1\",\n  \"password\": \"Admin@123\",\n  \"role\": \"ROLE_ADMIN\",\n  \"securityQuestion\": \"What is your pet name?\",\n  \"securityAnswer\": \"tommy\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.2 Register Employee User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"emp1\",\n  \"password\": \"Emp@123\",\n  \"role\": \"ROLE_EMPLOYEE\",\n  \"securityQuestion\": \"What is your school name?\",\n  \"securityAnswer\": \"dav school\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.3 Register Customer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"customer1\",\n  \"password\": \"Cust@123\",\n  \"role\": \"ROLE_CUSTOMER\",\n  \"securityQuestion\": \"What is your city?\",\n  \"securityAnswer\": \"mumbai\",\n  \"customerName\": \"Rahul Sharma\",\n  \"emailId\": \"rahul.sharma@gmail.com\",\n  \"contactNumber\": \"9876543210\",\n  \"drivingLicense\": \"DL0420110012345\",\n  \"address\": \"123 MG Road, Mumbai, Maharashtra\",\n  \"occupation\": \"Software Engineer\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.4 Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json.token) { pm.collectionVariables.set('adminToken', json.token); console.log('Admin token saved'); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin1\",\n  \"password\": \"Admin@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.5 Login Employee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json.token) { pm.collectionVariables.set('employeeToken', json.token); console.log('Employee token saved'); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"emp1\",\n  \"password\": \"Emp@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.6 Login Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json.token) { pm.collectionVariables.set('customerToken', json.token); console.log('Customer token saved'); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"customer1\",\n  \"password\": \"Cust@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.7 Get Security Question by Username",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/security-question/admin1"
+          }
+        },
+        {
+          "name": "1.8 Verify Security Answer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/verify-security-answer",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin1\",\n  \"securityAnswer\": \"tommy\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.9 Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin1\",\n  \"securityAnswer\": \"tommy\",\n  \"newPassword\": \"Admin@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.10 Change Password (Auth Required)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/auth/change-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Admin@123\",\n  \"newPassword\": \"Admin@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.11 Update Username (Auth Required) - SKIP IN RUNNER",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": ["postman.setNextRequest('1.12 Set Security Question (Auth Required)');"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/auth/update-username",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newUsername\": \"admin1_new\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.12 Set Security Question (Auth Required)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/auth/security-question",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"securityQuestion\": \"What is your pet name?\",\n  \"securityAnswer\": \"tommy\"\n}"
+            }
+          }
+        },
+        {
+          "name": "1.13 Get Own Security Question (Auth Required)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/auth/security-question"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. CARS",
+      "item": [
+        {
+          "name": "2.1 Add Car - Maruti Swift",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/cars",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registrationNumber\": \"MH01AB1234\",\n  \"model\": \"Swift\",\n  \"color\": \"Red\",\n  \"category\": \"Hatchback\",\n  \"carCondition\": \"Excellent\",\n  \"insuranceNumber\": \"INS-MH-001-2024\",\n  \"mileage\": 15000.0,\n  \"lastServiceMileage\": 10000.0,\n  \"lastServiceDate\": \"2026-03-01\",\n  \"rentalRatePerDay\": 1500.00,\n  \"rentalCount\": 0,\n  \"registrationDate\": \"2022-06-15\",\n  \"status\": \"AVAILABLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2.2 Add Car - Honda City",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/cars",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registrationNumber\": \"MH02CD5678\",\n  \"model\": \"City\",\n  \"color\": \"White\",\n  \"category\": \"Sedan\",\n  \"carCondition\": \"Good\",\n  \"insuranceNumber\": \"INS-MH-002-2024\",\n  \"mileage\": 8000.0,\n  \"lastServiceMileage\": 5000.0,\n  \"lastServiceDate\": \"2026-05-10\",\n  \"rentalRatePerDay\": 2500.00,\n  \"rentalCount\": 0,\n  \"registrationDate\": \"2023-01-20\",\n  \"status\": \"AVAILABLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2.3 Add Car - Toyota Innova",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/cars",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registrationNumber\": \"DL03EF9012\",\n  \"model\": \"Innova Crysta\",\n  \"color\": \"Silver\",\n  \"category\": \"SUV\",\n  \"carCondition\": \"Good\",\n  \"insuranceNumber\": \"INS-DL-003-2024\",\n  \"mileage\": 45000.0,\n  \"lastServiceMileage\": 40000.0,\n  \"lastServiceDate\": \"2026-02-15\",\n  \"rentalRatePerDay\": 4000.00,\n  \"rentalCount\": 0,\n  \"registrationDate\": \"2021-08-10\",\n  \"status\": \"AVAILABLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2.4 Add Car - Hyundai Creta",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/cars",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registrationNumber\": \"KA04GH3456\",\n  \"model\": \"Creta\",\n  \"color\": \"Blue\",\n  \"category\": \"SUV\",\n  \"carCondition\": \"Excellent\",\n  \"insuranceNumber\": \"INS-KA-004-2024\",\n  \"mileage\": 5000.0,\n  \"lastServiceMileage\": 0.0,\n  \"lastServiceDate\": \"2026-06-01\",\n  \"rentalRatePerDay\": 3500.00,\n  \"rentalCount\": 0,\n  \"registrationDate\": \"2023-03-12\",\n  \"status\": \"AVAILABLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2.5 Get All Cars",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/cars"
+          }
+        },
+        {
+          "name": "2.6 Get Car by Registration Number",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/cars/MH01AB1234"
+          }
+        },
+        {
+          "name": "2.7 Get Available Cars",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/cars/available"
+          }
+        },
+        {
+          "name": "2.8 Get Cars by Status - AVAILABLE",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/cars/status/AVAILABLE"
+          }
+        },
+        {
+          "name": "2.9 Get Cars by Category - SUV",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/cars/category/SUV"
+          }
+        },
+        {
+          "name": "2.10 Get Cars by Model - Swift",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/cars/model/Swift"
+          }
+        },
+        {
+          "name": "2.11 Get Cars Requiring Maintenance",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/cars/maintenance"
+          }
+        },
+        {
+          "name": "2.12 Update Car",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/cars/MH01AB1234",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registrationNumber\": \"MH01AB1234\",\n  \"model\": \"Swift\",\n  \"color\": \"Blue\",\n  \"category\": \"Hatchback\",\n  \"carCondition\": \"Good\",\n  \"insuranceNumber\": \"INS-MH-001-2024\",\n  \"mileage\": 16000.0,\n  \"lastServiceMileage\": 10000.0,\n  \"lastServiceDate\": \"2026-03-01\",\n  \"rentalRatePerDay\": 1600.00,\n  \"rentalCount\": 1,\n  \"registrationDate\": \"2022-06-15\",\n  \"status\": \"AVAILABLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2.13 Update Car Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/cars/MH01AB1234/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"MAINTENANCE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2.14 Update Car Mileage",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/cars/MH01AB1234/mileage?mileage=16500",
+              "host": ["{{baseUrl}}"],
+              "path": ["cars", "MH01AB1234", "mileage"],
+              "query": [{ "key": "mileage", "value": "16500" }]
+            }
+          }
+        },
+        {
+          "name": "2.15 Delete Car",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/cars/KA04GH3456"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. EMPLOYEES",
+      "item": [
+        {
+          "name": "3.1 Add Employee 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/employees",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeName\": \"Amit Verma\",\n  \"emailId\": \"amit.verma@FleetFlow.com\",\n  \"contactNumber\": \"9811223344\",\n  \"designation\": \"Fleet Manager\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"accountType\": \"FULL_TIME\",\n  \"accountActive\": true,\n  \"firstLogin\": true,\n  \"password\": \"Amit@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3.2 Add Employee 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/employees",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeName\": \"Priya Singh\",\n  \"emailId\": \"priya.singh@FleetFlow.com\",\n  \"contactNumber\": \"9922334455\",\n  \"designation\": \"Service Advisor\",\n  \"dateOfBirth\": \"1995-08-20\",\n  \"accountType\": \"PART_TIME\",\n  \"accountActive\": true,\n  \"firstLogin\": true,\n  \"password\": \"Priya@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3.3 Get All Employees",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/employees"
+          }
+        },
+        {
+          "name": "3.4 Get Employee by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/employees/1"
+          }
+        },
+        {
+          "name": "3.5 Get Employees by Designation",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/employees/designation/Fleet Manager"
+          }
+        },
+        {
+          "name": "3.6 Update Employee Contact (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/employees/1/contact",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactNumber\": \"9000111222\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3.7 Set Employee Expiry Date",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/employees/1/expiry?expiryDate=2027-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["employees", "1", "expiry"],
+              "query": [{ "key": "expiryDate", "value": "2027-12-31" }]
+            }
+          }
+        },
+        {
+          "name": "3.8 Auto Deactivate Expired Employees",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/employees/auto-deactivate"
+          }
+        },
+        {
+          "name": "3.9 Delete Employee",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/employees/2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. CUSTOMERS",
+      "item": [
+        {
+          "name": "4.1 Add Customer Manually",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/customers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Neha Gupta\",\n  \"emailId\": \"neha.gupta@gmail.com\",\n  \"contactNumber\": \"8877665544\",\n  \"drivingLicense\": \"UP0520120056789\",\n  \"address\": \"45 Nehru Nagar, Lucknow, UP\",\n  \"occupation\": \"Doctor\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4.2 Get All Customers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/customers"
+          }
+        },
+        {
+          "name": "4.3 Get Customer by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/customers/CUST-001"
+          }
+        },
+        {
+          "name": "4.4 Get Customer by Username",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": "{{baseUrl}}/customers/by-username/customer1"
+          }
+        },
+        {
+          "name": "4.5 Search Customer by Name",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/customers/search/Rahul"
+          }
+        },
+        {
+          "name": "4.6 Get Loyalty Points",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/customers/CUST-001/loyalty-points"
+          }
+        },
+        {
+          "name": "4.7 Get Loyalty Discount",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/customers/CUST-001/loyalty-discount"
+          }
+        },
+        {
+          "name": "4.8 Check Free Rental Eligibility",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/customers/CUST-001/free-rental-eligibility"
+          }
+        },
+        {
+          "name": "4.9 Blacklist Customer",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/customers/CUST-001/blacklist"
+          }
+        },
+        {
+          "name": "4.10 Unblacklist Customer",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/customers/CUST-001/unblacklist"
+          }
+        },
+        {
+          "name": "4.11 Update Customer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/customers/CUST-001",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Rahul Sharma\",\n  \"emailId\": \"rahul.sharma@gmail.com\",\n  \"contactNumber\": \"9999988888\",\n  \"drivingLicense\": \"DL0420110012345\",\n  \"address\": \"456 Andheri West, Mumbai\",\n  \"occupation\": \"Senior Software Engineer\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4.12 Update Contact Number",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/customers/CUST-001/contact/9876500000"
+          }
+        },
+        {
+          "name": "4.13 Customers with Max Bookings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/customers/max-bookings"
+          }
+        },
+        {
+          "name": "4.14 Delete Customer",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/customers/CUST-002"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. RENTALS (BOOKINGS)",
+      "item": [
+        {
+          "name": "5.1 Check Car Availability",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/rentals/availability?registrationNumber=MH02CD5678&startDate=2026-09-20&endDate=2026-09-25",
+              "host": ["{{baseUrl}}"],
+              "path": ["rentals", "availability"],
+              "query": [
+                { "key": "registrationNumber", "value": "MH02CD5678" },
+                { "key": "startDate", "value": "2026-09-20" },
+                { "key": "endDate", "value": "2026-09-25" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.2 Create Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json.bookingId) {",
+                  "  pm.collectionVariables.set('bookingId', String(json.bookingId));",
+                  "  pm.globals.set('bookingId', String(json.bookingId));",
+                  "  console.log('bookingId set to: ' + json.bookingId);",
+                  "} else {",
+                  "  console.log('ERROR: bookingId not found in response');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": "{{baseUrl}}/rentals",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"CUST-001\",\n  \"category\": \"Sedan\",\n  \"model\": \"City\",\n  \"startDate\": \"2026-09-20\",\n  \"endDate\": \"2026-09-25\",\n  \"passengerCount\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "5.3 Get All Bookings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/rentals"
+          }
+        },
+        {
+          "name": "5.4 Get Booking by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/rentals/{{bookingId}}"
+          }
+        },
+        {
+          "name": "5.5 Get Bookings by Customer",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": "{{baseUrl}}/rentals/customer/CUST-001"
+          }
+        },
+        {
+          "name": "5.6 Get Bookings by Car",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/rentals/car/MH02CD5678"
+          }
+        },
+        {
+          "name": "5.7 Get Active Bookings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/rentals/active"
+          }
+        },
+        {
+          "name": "5.8 Get Completed Bookings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/rentals/completed"
+          }
+        },
+        {
+          "name": "5.9 Modify Booking",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": "{{baseUrl}}/rentals/{{bookingId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2026-09-20\",\n  \"endDate\": \"2026-09-27\",\n  \"category\": \"Sedan\",\n  \"model\": \"City\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5.10 Create Booking for Cancel Test",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if(json.bookingId) {",
+                  "  pm.collectionVariables.set('cancelBookingId', String(json.bookingId));",
+                  "  pm.globals.set('cancelBookingId', String(json.bookingId));",
+                  "  console.log('cancelBookingId set to: ' + json.bookingId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": "{{baseUrl}}/rentals",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"CUST-001\",\n  \"category\": \"SUV\",\n  \"model\": \"Innova Crysta\",\n  \"startDate\": \"2026-10-01\",\n  \"endDate\": \"2026-10-05\",\n  \"passengerCount\": 3\n}"
+            }
+          }
+        },
+        {
+          "name": "5.11 Cancel Booking",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": "{{baseUrl}}/rentals/{{cancelBookingId}}"
+          }
+        },
+        {
+          "name": "5.12 Return Car",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{employeeToken}}" }
+            ],
+            "url": "{{baseUrl}}/rentals/{{bookingId}}/return",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mileageAtReturn\": 8500.0,\n  \"damaged\": false,\n  \"damageNotes\": \"\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5.13 Get Completed Bookings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/rentals/completed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. MAINTENANCE",
+      "item": [
+        {
+          "name": "6.1 Add Maintenance Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/maintenance",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registrationNumber\": \"MH01AB1234\",\n  \"maintenanceType\": \"ROUTINE\",\n  \"description\": \"Oil change and tyre rotation\",\n  \"scheduledDate\": \"2026-09-20\",\n  \"status\": \"SCHEDULED\",\n  \"cost\": 3500.00,\n  \"performedBy\": \"Quick Service Center\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6.2 Schedule Routine Maintenance",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/maintenance/routine",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registrationNumber\": \"MH02CD5678\",\n  \"maintenanceType\": \"ROUTINE\",\n  \"description\": \"Full service at 10000 km\",\n  \"scheduledDate\": \"2026-10-01\",\n  \"status\": \"SCHEDULED\",\n  \"cost\": 5000.00,\n  \"performedBy\": \"Honda Authorized Service\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6.3 Emergency Maintenance",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/maintenance/emergency",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registrationNumber\": \"DL03EF9012\",\n  \"maintenanceType\": \"EMERGENCY\",\n  \"description\": \"Engine overheating - urgent repair\",\n  \"scheduledDate\": \"2026-09-14\",\n  \"status\": \"IN_PROGRESS\",\n  \"cost\": 12000.00,\n  \"performedBy\": \"Toyota Service Center\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6.4 Get All Maintenance Records",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/maintenance"
+          }
+        },
+        {
+          "name": "6.5 Get Maintenance by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/maintenance/1"
+          }
+        },
+        {
+          "name": "6.6 Get Maintenance by Car",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/maintenance/car/MH01AB1234"
+          }
+        },
+        {
+          "name": "6.7 Get Maintenance by Type - ROUTINE",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/maintenance/type?type=ROUTINE",
+              "host": ["{{baseUrl}}"],
+              "path": ["maintenance", "type"],
+              "query": [{ "key": "type", "value": "ROUTINE" }]
+            }
+          }
+        },
+        {
+          "name": "6.8 Get Maintenance by Status - SCHEDULED",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/maintenance/status?status=SCHEDULED",
+              "host": ["{{baseUrl}}"],
+              "path": ["maintenance", "status"],
+              "query": [{ "key": "status", "value": "SCHEDULED" }]
+            }
+          }
+        },
+        {
+          "name": "6.9 Get Upcoming Maintenance",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/maintenance/upcoming"
+          }
+        },
+        {
+          "name": "6.10 Get Overdue Maintenance",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/maintenance/overdue"
+          }
+        },
+        {
+          "name": "6.11 Get Total Cost by Car",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/maintenance/cost/MH01AB1234"
+          }
+        },
+        {
+          "name": "6.12 Get Maintenance by Date Range",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/maintenance/range?start=2026-09-01&end=2026-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["maintenance", "range"],
+              "query": [
+                { "key": "start", "value": "2026-09-01" },
+                { "key": "end", "value": "2026-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.13 Update Maintenance Status to COMPLETED",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/maintenance/1/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\",\n  \"cost\": 3800.00,\n  \"performedBy\": \"Quick Service Center\",\n  \"completedDate\": \"2026-09-20\",\n  \"description\": \"Oil change, tyre rotation and filter replacement done\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6.14 Delete Maintenance Record",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/maintenance/3"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. REPORTS",
+      "item": [
+        {
+          "name": "7.1 Dashboard Statistics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/dashboard"
+          }
+        },
+        {
+          "name": "7.2 Fleet Health Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/fleet-health"
+          }
+        },
+        {
+          "name": "7.3 Customers with Max Bookings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/customers/max-bookings"
+          }
+        },
+        {
+          "name": "7.4 Cars with Minimal Bookings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/cars/minimal-bookings"
+          }
+        },
+        {
+          "name": "7.5 Income by Car Model",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/income/by-model"
+          }
+        },
+        {
+          "name": "7.6 Revenue for Period",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/reports/revenue/period?startDate=2026-01-01&endDate=2026-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "revenue", "period"],
+              "query": [
+                { "key": "startDate", "value": "2026-01-01" },
+                { "key": "endDate", "value": "2026-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7.7 Maintenance Cost by Model",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/maintenance/cost-by-model"
+          }
+        },
+        {
+          "name": "7.8 Maintenance Cost by Period",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/reports/maintenance/cost-by-period?startDate=2026-01-01&endDate=2026-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "maintenance", "cost-by-period"],
+              "query": [
+                { "key": "startDate", "value": "2026-01-01" },
+                { "key": "endDate", "value": "2026-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7.9 Car Utilization Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/car-utilization"
+          }
+        },
+        {
+          "name": "7.10 Customer Loyalty Analytics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/customer-loyalty"
+          }
+        },
+        {
+          "name": "7.11 Profitability Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/profitability"
+          }
+        },
+        {
+          "name": "7.12 Booking Trends",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/reports/booking-trends?startDate=2026-01-01&endDate=2026-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "booking-trends"],
+              "query": [
+                { "key": "startDate", "value": "2026-01-01" },
+                { "key": "endDate", "value": "2026-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7.13 Service Center Performance",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/service-center-performance"
+          }
+        },
+        {
+          "name": "7.14 Car Utilization List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/cars/utilization"
+          }
+        }
+      ]
+    }
+  ]
+}
+
+

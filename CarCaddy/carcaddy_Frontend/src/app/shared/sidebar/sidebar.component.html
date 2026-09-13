@@ -1,9 +1,9 @@
 <nav class="sidebar">
   <!-- Logo -->
   <div class="sidebar-logo">
-    <div class="logo-icon">CC</div>
+    <div class="logo-icon">FF</div>
     <div>
-      <div class="logo-text">CarCaddy</div>
+      <div class="logo-text">FleetFlow</div>
       <div class="logo-sub">Fleet Management</div>
     </div>
   </div>
@@ -21,35 +21,35 @@
   <div class="sidebar-nav">
     <div class="nav-section-label">Navigation</div>
 
-    <a class="nav-item" [class.active]="isActive('/dashboard')" routerLink="/dashboard">
+    <a class="nav-item" [class.active]="router.url.startsWith('/dashboard')" routerLink="/dashboard">
       <i class="bi bi-grid-1x2-fill"></i> Dashboard
     </a>
 
-    <a class="nav-item" [class.active]="isActive('/cars')" routerLink="/cars"
+    <a class="nav-item" [class.active]="router.url.startsWith('/cars')" routerLink="/cars"
        *ngIf="authService.isAdmin() || authService.isEmployee() || authService.isCustomer()">
       <i class="bi bi-car-front-fill"></i> Fleet
     </a>
 
-    <a class="nav-item" [class.active]="isActive('/customers')" routerLink="/customers"
+    <a class="nav-item" [class.active]="router.url.startsWith('/customers')" routerLink="/customers"
        *ngIf="authService.isAdmin() || authService.isEmployee()">
       <i class="bi bi-people-fill"></i> Customers
     </a>
 
-    <a class="nav-item" [class.active]="isActive('/rentals')" routerLink="/rentals">
+    <a class="nav-item" [class.active]="router.url.startsWith('/rentals')" routerLink="/rentals">
       <i class="bi bi-calendar-check-fill"></i> Rentals
     </a>
 
-    <a class="nav-item" [class.active]="isActive('/maintenance')" routerLink="/maintenance"
+    <a class="nav-item" [class.active]="router.url.startsWith('/maintenance')" routerLink="/maintenance"
        *ngIf="authService.isAdmin() || authService.isEmployee()">
       <i class="bi bi-tools"></i> Maintenance
     </a>
 
-    <a class="nav-item" [class.active]="isActive('/employees')" routerLink="/employees"
+    <a class="nav-item" [class.active]="router.url.startsWith('/employees')" routerLink="/employees"
        *ngIf="authService.isAdmin()">
       <i class="bi bi-person-badge-fill"></i> Employees
     </a>
 
-    <a class="nav-item" [class.active]="isActive('/reports')" routerLink="/reports"
+    <a class="nav-item" [class.active]="router.url.startsWith('/reports')" routerLink="/reports"
        *ngIf="authService.isAdmin() || authService.isEmployee()">
       <i class="bi bi-bar-chart-fill"></i> Reports
     </a>

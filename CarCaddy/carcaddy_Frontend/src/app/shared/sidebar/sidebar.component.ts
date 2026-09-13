@@ -1,14 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.css']
+  styleUrls: ['./sidebar.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SidebarComponent {
-  constructor(public authService: AuthService, private router: Router) {}
+  constructor(public authService: AuthService, public router: Router) {}
 
   get userInitial(): string {
     return this.authService.getUsername().charAt(0).toUpperCase();
@@ -20,10 +21,6 @@ export class SidebarComponent {
     if (role === 'ROLE_EMPLOYEE') return 'Employee';
     if (role === 'ROLE_CUSTOMER') return 'Customer';
     return role;
-  }
-
-  isActive(path: string): boolean {
-    return this.router.url.startsWith(path);
   }
 
   logout(): void {

@@ -140,7 +140,7 @@
           <div class="card-header fw-bold"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Revenue by Car Model — Bar Chart</div>
           <div class="card-body">
             <canvas #incomeBarChart style="max-height:260px"></canvas>
-            <p *ngIf="incomeEntries.length === 0" class="text-muted text-center">No revenue data</p>
+            <p *ngIf="cachedIncomeEntries.length === 0" class="text-muted text-center">No revenue data</p>
           </div>
         </div>
       </div>
@@ -150,16 +150,16 @@
         <div class="card">
           <div class="card-header fw-bold"><i class="bi bi-wrench-adjustable text-danger me-2"></i>Maintenance Cost by Model</div>
           <div class="card-body">
-            <div *ngFor="let entry of maintenanceEntries" class="mb-2">
+            <div *ngFor="let entry of cachedMaintenanceEntries" class="mb-2">
               <div class="d-flex justify-content-between mb-1">
                 <span class="small">{{entry[0]}}</span>
                 <span class="small fw-bold text-danger">₹{{entry[1] | number:'1.0-0'}}</span>
               </div>
               <div class="progress" style="height:8px">
-                <div class="progress-bar bg-danger" [style.width.%]="getPercent(entry[1], maintenanceEntries)"></div>
+                <div class="progress-bar bg-danger" [style.width.%]="getPercent(entry[1])"></div>
               </div>
             </div>
-            <p *ngIf="maintenanceEntries.length === 0" class="text-muted text-center">No maintenance data</p>
+            <p *ngIf="cachedMaintenanceEntries.length === 0" class="text-muted text-center">No maintenance data</p>
           </div>
         </div>
       </div>
@@ -170,7 +170,7 @@
           <div class="card-header fw-bold"><i class="bi bi-bar-chart-fill text-info me-2"></i>Car Utilization — Bar Chart</div>
           <div class="card-body">
             <canvas #utilizationBarChart style="max-height:260px"></canvas>
-            <p *ngIf="utilizationEntries.length === 0" class="text-muted text-center">No utilization data</p>
+            <p *ngIf="cachedUtilizationEntries.length === 0" class="text-muted text-center">No utilization data</p>
           </div>
         </div>
       </div>
@@ -180,11 +180,11 @@
         <div class="card">
           <div class="card-header fw-bold"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Cars with Minimal Bookings</div>
           <div class="card-body">
-            <div *ngFor="let entry of minimalEntries" class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+            <div *ngFor="let entry of cachedMinimalEntries" class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
               <span class="small fw-bold">{{entry[0]}}</span>
               <span class="badge bg-warning text-dark">{{entry[1]}} bookings</span>
             </div>
-            <p *ngIf="minimalEntries.length === 0" class="text-muted text-center">No data</p>
+            <p *ngIf="cachedMinimalEntries.length === 0" class="text-muted text-center">No data</p>
           </div>
         </div>
       </div>

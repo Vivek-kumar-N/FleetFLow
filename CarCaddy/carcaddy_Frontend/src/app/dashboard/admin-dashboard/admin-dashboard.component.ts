@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ReportsService } from '../../services/reports.service';
 import { CarService } from '../../services/car.service';
 import { DashboardStats } from '../../models/models';
@@ -9,7 +9,8 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-admin-dashboard',
   templateUrl: './admin-dashboard.component.html',
-  styleUrls: ['./admin-dashboard.component.css']
+  styleUrls: ['./admin-dashboard.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -31,7 +32,14 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   error = '';
   dataReady = false;
 
-  constructor(private reportsService: ReportsService, private carService: CarService) {}
+  // Cached computed arrays - recalculated only when data loads
+  cachedIncomeEntries: [string, number][] = [];
+  cachedMaintenanceEntries: [string, number][] = [];
+  cachedUtilizationEntries: [string, number][] = [];
+  cachedMinimalEntries: [string, number][] = [];
+  maintenanceMax = 0;
+
+  constructor(private reportsService: ReportsService, private carService: CarService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void { this.loadAll(); }
 
@@ -49,7 +57,9 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       if (--pending === 0) {
         this.loading = false;
         this.dataReady = true;
-        setTimeout(() => this.renderCharts(), 150);
+        this.computeCachedEntries();
+        this.cdr.markForCheck();
+        setTimeout(() => { this.renderCharts(); this.cdr.markForCheck(); }, 150);
       }
     };
 
@@ -64,6 +74,14 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.carService.getCarsRequiringMaintenance().subscribe({ next: d => { this.carsNeedingMaintenance = d; done(); }, error: () => done() });
   }
 
+  private computeCachedEntries(): void {
+    this.cachedIncomeEntries = Object.entries(this.incomeByModel || {}).map(([k, v]) => [k, Number(v)] as [string, number]).sort((a, b) => b[1] - a[1]);
+    this.cachedMaintenanceEntries = Object.entries(this.maintenanceCostByModel || {}).map(([k, v]) => [k, Number(v)] as [string, number]);
+    this.cachedUtilizationEntries = Object.entries(this.carUtilization || {}).map(([k, v]) => [k, Number(v)] as [string, number]).sort((a, b) => b[1] - a[1]);
+    this.cachedMinimalEntries = Object.entries(this.minimalBookingsCars || {}).map(([k, v]) => [k, Number(v)] as [string, number]);
+    this.maintenanceMax = this.cachedMaintenanceEntries.length > 0 ? Math.max(...this.cachedMaintenanceEntries.map(e => e[1])) : 0;
+  }
+
   private renderCharts(): void {
     this.charts.forEach(c => c.destroy());
     this.charts = [];
@@ -73,7 +91,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
   private renderUtilizationChart(): void {
     if (!this.utilizationBarChartRef?.nativeElement) return;
-    const entries = this.utilizationEntries;
+    const entries = this.cachedUtilizationEntries;
     if (entries.length === 0) return;
     const ctx = this.utilizationBarChartRef.nativeElement.getContext('2d');
     this.charts.push(new Chart(ctx, {
@@ -98,7 +116,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
   private renderIncomeChart(): void {
     if (!this.incomeBarChartRef?.nativeElement) return;
-    const entries = this.incomeEntries;
+    const entries = this.cachedIncomeEntries;
     if (entries.length === 0) return;
     const ctx = this.incomeBarChartRef.nativeElement.getContext('2d');
     this.charts.push(new Chart(ctx, {
@@ -121,13 +139,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     }));
   }
 
-  get incomeEntries(): [string, number][] { return Object.entries(this.incomeByModel || {}).map(([k, v]) => [k, Number(v)] as [string, number]).sort((a, b) => b[1] - a[1]); }
-  get maintenanceEntries(): [string, number][] { return Object.entries(this.maintenanceCostByModel || {}).map(([k, v]) => [k, Number(v)] as [string, number]); }
-  get utilizationEntries(): [string, number][] { return Object.entries(this.carUtilization || {}).map(([k, v]) => [k, Number(v)] as [string, number]).sort((a, b) => b[1] - a[1]); }
-  get minimalEntries(): [string, number][] { return Object.entries(this.minimalBookingsCars || {}).map(([k, v]) => [k, Number(v)] as [string, number]); }
-
-  getPercent(val: any, entries: any[]): number {
-    const max = Math.max(...entries.map(e => Number(e[1])));
-    return max > 0 ? (Number(val) / max) * 100 : 0;
+  getPercent(val: number): number {
+    return this.maintenanceMax > 0 ? (val / this.maintenanceMax) * 100 : 0;
   }
 }
