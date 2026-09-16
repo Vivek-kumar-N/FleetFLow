@@ -5,42 +5,42 @@
   <div *ngIf="!loading">
     <!-- Platform-wide Stats -->
     <div class="row g-3 mb-4">
-      <div class="col-md-2 col-sm-4 col-6">
+      <div class="col-xl-2 col-md-4 col-sm-4 col-6">
         <div class="stat-card bg-primary text-white">
           <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
           <div class="stat-value">{{stats.totalEmployees}}</div>
           <div class="stat-label">Employees</div>
         </div>
       </div>
-      <div class="col-md-2 col-sm-4 col-6">
+      <div class="col-xl-2 col-md-4 col-sm-4 col-6">
         <div class="stat-card bg-success text-white">
           <div class="stat-icon"><i class="bi bi-car-front-fill"></i></div>
           <div class="stat-value">{{stats.totalCars}}</div>
           <div class="stat-label">Cars in Fleet</div>
         </div>
       </div>
-      <div class="col-md-2 col-sm-4 col-6">
+      <div class="col-xl-2 col-md-4 col-sm-4 col-6">
         <div class="stat-card bg-info text-white">
           <div class="stat-icon"><i class="bi bi-person-badge-fill"></i></div>
           <div class="stat-value">{{stats.totalCustomers}}</div>
           <div class="stat-label">Customers</div>
         </div>
       </div>
-      <div class="col-md-2 col-sm-4 col-6">
+      <div class="col-xl-2 col-md-4 col-sm-4 col-6">
         <div class="stat-card bg-warning text-white">
           <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
           <div class="stat-value">{{stats.totalRentals}}</div>
           <div class="stat-label">Total Rentals</div>
         </div>
       </div>
-      <div class="col-md-2 col-sm-4 col-6">
+      <div class="col-xl-2 col-md-4 col-sm-4 col-6">
         <div class="stat-card bg-danger text-white">
           <div class="stat-icon"><i class="bi bi-tools"></i></div>
           <div class="stat-value">{{stats.totalMaintenanceRecords}}</div>
           <div class="stat-label">Maintenance</div>
         </div>
       </div>
-      <div class="col-md-2 col-sm-4 col-6">
+      <div class="col-xl-2 col-md-4 col-sm-4 col-6">
         <div class="stat-card bg-secondary text-white">
           <div class="stat-icon"><i class="bi bi-speedometer2"></i></div>
           <div class="stat-value">{{fleetHealth?.fleetUtilization || 0 | number:'1.0-0'}}%</div>
