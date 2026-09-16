@@ -552,7 +552,7 @@ Client                          Server
 ### Step 1 — Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/FleetFlow.git
+git clone https://github.com/Vivek-kumar-N/FleetFlow.git
 cd FleetFlow
 ```
 
