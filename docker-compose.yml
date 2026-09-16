@@ -1,0 +1,63 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# FleetFlow – Docker Compose
+# Services: mysql-db → backend → frontend
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── 1. MySQL 8.0 ───────────────────────────────────────────────────────────
+  mysql-db:
+    image: mysql:8.0
+    container_name: fleetflow-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-StrongP@ss123}
+      MYSQL_DATABASE: fleetflow_db
+    ports:
+      - "3307:3306"           # 3307 on host → 3306 in container (avoids conflict with local MySQL80 service)
+    volumes:
+      - mysql_data:/var/lib/mysql   # persist data across restarts
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost",
+             "-u", "root", "--password=${MYSQL_ROOT_PASSWORD:-StrongP@ss123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── 2. Spring Boot Backend ─────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./FleetFlow_Backend/FleetFlow
+      dockerfile: Dockerfile
+    container_name: fleetflow-backend
+    restart: unless-stopped
+    depends_on:
+      mysql-db:
+        condition: service_healthy   # wait until MySQL is ready
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/fleetflow_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-StrongP@ss123}
+      # Optional: override mail credentials without editing properties file
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    ports:
+      - "8080:8080"           # expose to host for direct API testing
+
+  # ── 3. Angular Frontend (Nginx) ────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./FleetFlow_Frontend
+      dockerfile: Dockerfile
+    container_name: fleetflow-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"               # http://localhost → Angular app
+
+# ─────────────────────────────────────────────────────────────────────────────
+volumes:
+  mysql_data:
+    driver: local
